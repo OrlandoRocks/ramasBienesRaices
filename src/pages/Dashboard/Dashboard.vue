@@ -67,7 +67,7 @@
     <div class="col-lg-4" :class="{ 'text-right': isRTL }">
       <card type="chart">
         <template slot="header">
-          <h5 class="card-category">Total Shipments</h5>
+          <h5 class="card-category">Total Terrenos Vendidos</h5>
           <h3 class="card-title">
             <i class="tim-icons icon-bell-55 text-primary"></i> 763,215
           </h3>
@@ -87,9 +87,9 @@
     <div class="col-lg-4" :class="{ 'text-right': isRTL }">
       <card type="chart">
         <template slot="header">
-          <h5 class="card-category">Daily Sales</h5>
+          <h5 class="card-category">Total de Ventas</h5>
           <h3 class="card-title">
-            <i class="tim-icons icon-delivery-fast text-info"></i> 3,500€
+            <i class="tim-icons icon-delivery-fast text-info"></i> 3,500,000$
           </h3>
         </template>
         <div class="chart-area">
@@ -106,9 +106,9 @@
     <div class="col-lg-4" :class="{ 'text-right': isRTL }">
       <card type="chart">
         <template slot="header">
-          <h5 class="card-category">Completed tasks</h5>
+          <h5 class="card-category">Reporte de Actividades</h5>
           <h3 class="card-title">
-            <i class="tim-icons icon-send text-success"></i> 12,100K
+            <i class="tim-icons icon-send text-success"></i> 1,100K
           </h3>
         </template>
         <div class="chart-area">
@@ -125,8 +125,8 @@
     <div class="col-lg-5">
       <card type="tasks" :header-classes="{ 'text-right': isRTL }">
         <template slot="header">
-          <h6 class="title d-inline">Tasks (5)</h6>
-          <p class="card-category d-inline">Today</p>
+          <h6 class="title d-inline">Actividades (5)</h6>
+          <p class="card-category d-inline">Hoy</p>
           <base-dropdown
             menu-on-right=""
             tag="div"
@@ -146,7 +146,7 @@
     </div>
     <div class="col-lg-7">
       <card class="card" :header-classes="{ 'text-right': isRTL }">
-        <h5 slot="header" class="card-title">Management table</h5>
+        <h5 slot="header" class="card-title">Tabla de control</h5>
         <div class="table-responsive"><user-table></user-table></div>
       </card>
     </div>
@@ -169,7 +169,7 @@ let bigChartData = [
   [60, 80, 65, 130, 80, 105, 90, 130, 70, 115, 60, 130],
 ];
 let bigChartLabels = [
-  "JAN",
+  "ENE",
   "FEB",
   "MAR",
   "APR",

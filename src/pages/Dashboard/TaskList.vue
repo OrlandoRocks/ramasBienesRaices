@@ -32,36 +32,36 @@ export default {
     return {
       tableData: [
         {
-          title: "Update the Documentation",
-          description: "Dwuamish Head, Seattle, WA 8:47 AM",
+          title: "Visita Terreno",
+          description: "Mostrar terrene al cliente, Nombre del cliente,  8:47 AM",
           done: false,
         },
         {
-          title: "GDPR Compliance",
+          title: "Verificar Documentacion",
           description:
-            "The GDPR is a regulation that requires businesses to protect the personal data and privacy of Europe citizens for transactions that occur within EU member states.",
+            "Gestionar contratos, acuerdos, documentos de identificación, y otros documentos relevantes",
           done: true,
         },
         {
-          title: "Solve the issues",
+          title: "Resolver problemas",
           description:
-            "Fifty percent of all respondents said they would be more likely to shop at a company",
+            "Algun inconveniente que se necesite resolver con el cliente",
           done: false,
         },
         {
-          title: "Release v2.0.0",
-          description: "Ra Ave SW, Seattle, WA 98116, SUA 11:19 AM",
+          title: "Procesar pagos",
+          description: "Revisar pagos pendientes y procesarlos",
           done: false,
         },
         {
-          title: "Export the processed files",
+          title: "Exportar reporte",
           description:
-            "The report also shows that consumers will not easily forgive a company once a breach exposing their personal data occurs.",
+            "Este reporte es importante para el cliente, por favor exportarlo",
           done: false,
         },
         {
-          title: "Arival at export process",
-          description: "Capitol Hill, Seattle, WA 12:34 AM",
+          title: "Mas tareas necesarias",
+          description: "Poner aqui la descripcion de la tarea",
           done: false,
         },
       ],

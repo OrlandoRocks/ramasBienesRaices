@@ -3,7 +3,14 @@
     <ValidationObserver v-slot="{ handleSubmit }">
       <form class="form-horizontal" @submit.prevent="handleSubmit(submit)">
         <card>
-          <h4 slot="header" class="card-title">Fraccionamiento</h4>
+          <h4
+            slot="header"
+            class="card-title clickable"
+            @click="goToResidentials"
+          >
+            <i class="tim-icons icon-minimal-left"></i>
+            Fraccionamiento
+          </h4>
           <div>
             <div class="row">
               <label class="col-sm-2 col-form-label">Nombre del Fracc</label>
@@ -104,11 +111,15 @@
             </div>
           </div>
           <div class="text-center">
-            <base-button native-type="submit" type="primary"
-              >Crear Fraccionamiento</base-button
+            <base-button
+              :disabled="isSubmitting"
+              native-type="submit"
+              type="primary"
+              >{{ create_edit }} Fraccionamiento</base-button
             >
           </div>
         </card>
+        {{ lands }}
       </form>
     </ValidationObserver>
   </div>
@@ -130,22 +141,46 @@ export default {
     [Option.name]: Option,
   },
   computed: {
-    ...mapGetters(["getUsersList"]),
+    ...mapGetters(["getUsersList", "getResidentialById"]),
     usersList() {
       return this.getUsersList;
     },
   },
   data() {
     return {
+      id: "",
       name: "",
       address: "",
       cost: "",
       user_id: "",
+      lands: [],
+      create_edit: "Crear",
+      isSubmitting: false,
     };
   },
   methods: {
-    ...mapActions(["createResidential"]),
+    ...mapActions([
+      "createResidential",
+      "fetchResidentialById",
+      "updateResidential",
+    ]),
+    loadResidentialData(id) {
+      this.fetchResidentialById(id)
+        .then((res) => {
+          this.id = res.id;
+          this.name = res.name;
+          this.address = res.address;
+          this.cost = res.cost;
+          this.lands = res.lands;
+          this.user_id = String(res.user_id);
+          this.create_edit = "Editar";
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
     submit() {
+      this.isSubmitting = true;
       let data = {
         residential: {
           name: this.name,
@@ -154,26 +189,52 @@ export default {
           user_id: this.user_id,
         },
       };
-      console.log(data);
-      this.createResidential(data)
-        .then(() => {
-          this.$notify({
-            title: "Success",
-            type: "success",
-            message: "Fraccionamiento creado con éxito",
-            icon: "tim-icons icon-bell-55",
+      if (this.create_edit === "Editar") {
+        data.residential.id = this.id;
+        this.updateResidential(data)
+          .then(() => {
+            this.$notify({
+              title: "Success",
+              type: "success",
+              message: "Fraccionamiento actualizado con éxito",
+              icon: "tim-icons icon-bell-55",
+            });
+          })
+          .catch((error) => {
+            console.log(error);
+            this.isSubmitting = false;
+            this.$notify({
+              title: "Error",
+              type: "danger",
+              message: "Error al actualizar el fraccionamiento",
+              icon: "tim-icons icon-bell-55",
+            });
           });
-        })
-        .catch((error) => {
-          console.log(error);
-          this.$notify({
-            title: "Error",
-            type: "danger",
-            message: "Error al crear el fraccionamiento",
-            icon: "tim-icons icon-bell-55",
+      } else {
+        this.createResidential(data)
+          .then(() => {
+            this.$notify({
+              title: "Success",
+              type: "success",
+              message: "Fraccionamiento creado con éxito",
+              icon: "tim-icons icon-bell-55",
+            });
+          })
+          .catch((error) => {
+            console.log(error);
+            this.isSubmitting = false;
+            this.resetData();
+            this.$notify({
+              title: "Error",
+              type: "danger",
+              message: "Error al crear el fraccionamiento",
+              icon: "tim-icons icon-bell-55",
+            });
           });
-        });
-      this.resetData();
+      }
+    },
+    goToResidentials() {
+      this.$router.push({ name: "Residentials" });
     },
     resetData() {
       this.name = "";
@@ -185,10 +246,24 @@ export default {
   mounted() {
     this.$store.dispatch("usersList");
   },
+  created() {
+    const residentialId = this.$route.params.id;
+    if (residentialId) {
+      this.loadResidentialData(residentialId);
+    }
+    this.create_edit = residentialId ? "Editar" : "Crear";
+  },
 };
 </script>
 <style>
 .error-message {
   color: red;
+}
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover {
+  color: #e14eca !important;
 }
 </style>

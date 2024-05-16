@@ -31,9 +31,9 @@
         </sidebar-item>
         <sidebar-item
           :link="{
-            name: $t('sidebar.widgets'),
-            icon: 'tim-icons icon-settings',
-            path: '/widgets',
+            name: $t('sidebar.clients'),
+            icon: 'tim-icons icon-badge',
+            path: '/clients',
           }"
         ></sidebar-item>
         <sidebar-item

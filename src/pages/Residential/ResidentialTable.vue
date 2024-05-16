@@ -25,7 +25,9 @@
                 >
                 </el-option>
               </el-select>
-
+              <base-button @click="goToCreateResidential" type="info">
+                <i class="tim-icons icon-simple-add"> </i> Crear Nuevo
+              </base-button>
               <base-input>
                 <el-input
                   type="search"
@@ -100,7 +102,6 @@
             </base-pagination>
           </div>
         </card>
-        {{ this.getResidentials }}
       </div>
     </div>
   </div>
@@ -122,6 +123,9 @@ export default {
   },
   computed: {
     ...mapGetters(["getResidentials"]),
+    tableData() {
+      return this.getResidentials;
+    },
     queriedData() {
       let result = this.tableData;
       if (this.searchedData.length > 0) {
@@ -154,7 +158,7 @@ export default {
         total: 0,
       },
       searchQuery: "",
-      propsToSearch: ["name", "email", "age"],
+      propsToSearch: ["name", "address", "user_name"],
       tableColumns: [
         {
           prop: "name",
@@ -172,7 +176,7 @@ export default {
           minWidth: 120,
         },
         {
-          prop: "lands",
+          prop: "lands_count",
           label: "Lotes",
           minWidth: 100,
         },
@@ -187,16 +191,15 @@ export default {
           minWidth: 120,
         },
       ],
-      tableData: [],
       searchedData: [],
       fuseSearch: null,
     };
   },
   methods: {
-    ...mapActions(["fetchResidentials"]),
+    ...mapActions(["fetchResidentials", "deleteResidential"]),
     handleLike(index, row) {
       swal.fire({
-        title: `You liked ${row.name}`,
+        title: `Has marcado como favorito el ${row.name}`,
         buttonsStyling: false,
         icon: "success",
         customClass: {
@@ -205,33 +208,28 @@ export default {
       });
     },
     handleEdit(index, row) {
-      swal.fire({
-        title: `You want to edit ${row.name}`,
-        buttonsStyling: false,
-        customClass: {
-          confirmButton: "btn btn-info btn-fill",
-        },
-      });
+      this.$router.push({ name: "EditResidential", params: { id: row.id } });
     },
     handleDelete(index, row) {
       swal
         .fire({
-          title: "Are you sure?",
-          text: `You won't be able to revert this!`,
+          title: "Estas seguro?",
+          text: `No podras revertir estos cambios!`,
           icon: "warning",
           showCancelButton: true,
           customClass: {
             confirmButton: "btn btn-success btn-fill",
             cancelButton: "btn btn-danger btn-fill",
           },
-          confirmButtonText: "Yes, delete it!",
+          confirmButtonText: "Si, Borralo!",
           buttonsStyling: false,
         })
         .then((result) => {
           if (result.value) {
+            this.deleteResidential(row.id);
             this.deleteRow(row);
             swal.fire({
-              title: "Deleted!",
+              title: "Eliminado!",
               text: `You deleted ${row.name}`,
               icon: "success",
               confirmButtonClass: "btn btn-success btn-fill",
@@ -248,26 +246,24 @@ export default {
         this.tableData.splice(indexToDelete, 1);
       }
     },
+    goToCreateResidential() {
+      this.$router.push({ name: "CreateResidential" });
+    },
   },
   mounted() {
-    // Fuse search initialization.
-    this.fuseSearch = new Fuse(this.tableData, {
-      keys: ["name", "email"],
+    this.fuseSearch = new Fuse(this.getResidentials, {
+      keys: ["name", "address", "user_name"],
       threshold: 0.3,
     });
+  },
+  created() {
     this.$store.dispatch("fetchResidentials");
-    this.tableData = this.getResidentials;
-    console.log("this.getResidentials");
-    console.log(this.getResidentials);
-    console.log("this.getResidentials");
   },
   watch: {
     searchQuery(value) {
       let result = this.tableData;
       if (value !== "") {
-        console.log(value);
         const searchResult = this.fuseSearch.search(this.searchQuery);
-        console.log(result);
         result = searchResult.map((item) => item.item);
       }
       this.searchedData = result;

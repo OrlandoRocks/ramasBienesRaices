@@ -14,6 +14,16 @@ module.exports = {
         src: resolveSrc("src"),
         "chart.js": "chart.js/dist/Chart.js",
       },
+      fallback: {
+        assert: require.resolve("assert"),
+        fs: false,
+        process: require.resolve("process/browser"),
+        url: require.resolve("url"),
+        path: require.resolve("path-browserify"),
+        module: false,
+        v8: false,
+        util: require.resolve("util"),
+      },
     },
     plugins: [
       new webpack.optimize.LimitChunkCountPlugin({
@@ -30,8 +40,8 @@ module.exports = {
   },
   pluginOptions: {
     i18n: {
-      locale: "en",
-      fallbackLocale: "en",
+      locale: "es",
+      fallbackLocale: "es",
       localeDir: "locales",
       enableInSFC: false,
     },

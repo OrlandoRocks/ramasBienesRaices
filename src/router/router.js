@@ -15,15 +15,15 @@ const router = new VueRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  const isAuthenticated = !!localStorage.getItem("auth_token"); // Change this depending on how you store the token
+  const isAuthenticated = !!localStorage.getItem("auth_token");
   if (to.matched.some((record) => record.meta.requiresAuth)) {
-    if (!isAuthenticated && to.path !== "/login") {
+    if (!isAuthenticated) {
       next({ name: "Login" });
     } else {
       next();
     }
   } else {
-    if (isAuthenticated) {
+    if (isAuthenticated && to.name === "Login") {
       next({ name: "Dashboard" });
     } else {
       next();

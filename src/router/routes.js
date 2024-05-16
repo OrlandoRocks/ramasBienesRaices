@@ -53,6 +53,7 @@ const ValidationForms = () => import("src/pages/Forms/ValidationForms.vue");
 const Wizard = () => import("src/pages/Forms/Wizard.vue");
 const ResidentialForm = () =>
   import("src/pages/Residential/ResidentialForm.vue");
+const ClientForm = () => import("src/pages/Clients/ClientForm.vue");
 
 // Maps pages
 const GoogleMaps = () =>
@@ -67,8 +68,6 @@ const User = () =>
   import(/* webpackChunkName: "pages" */ "src/pages/Pages/UserProfile.vue");
 // const Pricing = () =>
 //   import(/* webpackChunkName: "pages" */ "src/pages/Pages/Pricing.vue");
-const TimeLine = () =>
-  import(/* webpackChunkName: "pages" */ "src/pages/Pages/TimeLinePage.vue");
 const Login = () =>
   import(/* webpackChunkName: "pages" */ "src/pages/Pages/Login.vue");
 const Register = () =>
@@ -77,6 +76,7 @@ const Register = () =>
 // TableList pages
 const ResidentialsTable = () =>
   import("src/pages/Residential/ResidentialTable.vue");
+const ClientTable = () => import("src/pages/Clients/ClientTable.vue");
 
 const RegularTables = () =>
   import(/* webpackChunkName: "tables" */ "src/pages/Tables/RegularTables.vue");
@@ -216,21 +216,51 @@ let mapsMenu = {
   meta: { requiresAuth: true },
 };
 
-let pagesMenu = {
-  path: "/pages",
+let residentialsMenu = {
+  path: "/residentials",
   component: DashboardLayout,
-  name: "Pages",
-  redirect: "/pages/user",
+  name: "Residentials",
+  redirect: "/residentials",
   children: [
     {
-      path: "user",
-      name: "User Page",
-      components: { default: User },
+      path: "",
+      name: "Residentials",
+      components: { default: ResidentialsTable },
     },
     {
-      path: "timeline",
-      name: "Timeline Page",
-      components: { default: TimeLine },
+      path: "new",
+      name: "CreateResidential",
+      components: { default: ResidentialForm },
+    },
+    {
+      path: ":id/edit",
+      name: "EditResidential",
+      components: { default: ResidentialForm },
+    },
+  ],
+  meta: { requiresAuth: true },
+};
+
+let clientsMenu = {
+  path: "/clients",
+  component: DashboardLayout,
+  name: "Clients",
+  redirect: "/clients",
+  children: [
+    {
+      path: "",
+      name: "Clients",
+      components: { default: ClientTable },
+    },
+    {
+      path: "new",
+      name: "CreateClient",
+      components: { default: ClientForm },
+    },
+    {
+      path: ":id/edit",
+      name: "EditResidential",
+      components: { default: ClientForm },
     },
   ],
   meta: { requiresAuth: true },
@@ -265,7 +295,8 @@ const routes = [
   formsMenu,
   tablesMenu,
   mapsMenu,
-  pagesMenu,
+  residentialsMenu,
+  clientsMenu,
   authPages,
   {
     path: "/",
@@ -292,16 +323,6 @@ const routes = [
         path: "widgets",
         name: "Widgets",
         components: { default: Widgets },
-      },
-      {
-        path: "residentials",
-        name: "Residentials",
-        components: { default: ResidentialsTable },
-      },
-      {
-        path: "residentials/new",
-        name: "Residentials",
-        components: { default: ResidentialForm },
       },
     ],
     meta: { requiresAuth: true },

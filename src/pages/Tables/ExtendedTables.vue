@@ -194,7 +194,7 @@ export default {
         {
           id: 5,
           img: "img/mike.jpg",
-          name: "Paul Dickens",
+          name: "Ramas Midnight",
           job: "Develop",
           progress: 100,
           since: 2015,

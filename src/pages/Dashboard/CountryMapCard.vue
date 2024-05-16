@@ -1,8 +1,8 @@
 <template>
   <card>
     <template slot="header">
-      <h4 class="card-title">Global Sales by Top Locations</h4>
-      <p class="card-category">All products that were shipped</p>
+      <h4 class="card-title">Mapa Global</h4>
+      <p class="card-category">descripcion</p>
     </template>
     <div class="row">
       <div class="col-md-6 ml-auto mr-auto">
@@ -21,7 +21,7 @@
                 <td>
                   <div class="flag"><img src="img/DE.png" alt="DE" /></div>
                 </td>
-                <td>Germany</td>
+                <td>Alemania</td>
                 <td class="text-right">1.300</td>
                 <td class="text-right">20.43%</td>
               </tr>
@@ -37,7 +37,7 @@
                 <td>
                   <div class="flag"><img src="img/GB.png" alt="GB" /></div>
                 </td>
-                <td>United Kingdom</td>
+                <td>Reino Unido</td>
                 <td class="text-right">690</td>
                 <td class="text-right">7.87%</td>
               </tr>

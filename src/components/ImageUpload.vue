@@ -35,24 +35,24 @@ export default {
     type: {
       type: String,
       default: "",
-      description: 'Image upload type (""|avatar)',
+      description: 'tipo de imagen (""|avatar)',
     },
     src: {
       type: String,
       default: "",
-      description: "Initial image to display",
+      description: "Imagen inicial a mostrar",
     },
     selectText: {
       type: String,
-      default: "Select image",
+      default: "Seleccionar Imagen",
     },
     changeText: {
       type: String,
-      default: "Change",
+      default: "Cambiar",
     },
     removeText: {
       type: String,
-      default: "Remove",
+      default: "Quitar",
     },
   },
   data() {

@@ -130,9 +130,9 @@ export default {
             message: `La informacion es incorrecta!`,
             icon: "tim-icons icon-bell-55",
           });
+          this.resetData();
           console.log(error);
         });
-      this.resetData();
     },
     resetData() {
       this.email = "";

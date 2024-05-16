@@ -2,10 +2,10 @@
   <base-table :data="table" thead-classes="text-primary">
     <template slot="columns">
       <th>#</th>
-      <th>Name</th>
-      <th>Job Position</th>
-      <th>Salary</th>
-      <th class="text-right">Milestone</th>
+      <th>Nombre</th>
+      <th>Posicion</th>
+      <th>Progreso</th>
+      <th class="text-right">Tareas</th>
       <th class="text-right">Actions</th>
     </template>
 
@@ -16,7 +16,7 @@
       <td>{{ row.name }}</td>
       <td>{{ row.job }}</td>
       <td class="text-center"><base-progress :value="row.progress" /></td>
-      <td class="text-right">€ 99,225</td>
+      <td class="text-right">10</td>
       <td class="text-right">
         <el-tooltip
           content="Refresh"
@@ -66,42 +66,42 @@ export default {
         {
           id: 1,
           img: "img/tania.jpg",
-          name: "Tania Mike",
-          job: "Develop",
+          name: "Rosa Medrano",
+          job: "Contadora",
           progress: 25,
-          salary: "€ 99,225",
+          salary: "99",
         },
         {
           id: 2,
           img: "img/robi.jpg",
-          name: "John Doe",
-          job: "CEO",
+          name: "Elver Garcia",
+          job: "Vendedor",
           progress: 77,
-          salary: "€ 89,241",
+          salary: "89",
         },
         {
           id: 3,
           img: "img/lora.jpg",
-          name: "Alexa Mike",
-          job: "Design",
+          name: "Adrian Monino",
+          job: "Arquitecto",
           progress: 41,
-          salary: "€ 92,144",
+          salary: "22",
         },
         {
           id: 4,
           img: "img/jana.jpg",
-          name: "Jana Monday",
+          name: "Juana Perez",
           job: "Marketing",
           progress: 50,
-          salary: "€ 49,990",
+          salary: "49",
         },
         {
           id: 5,
           img: "img/mike.jpg",
-          name: "Paul Dickens",
-          job: "Develop",
+          name: "Ramas Midnight",
+          job: "El mero Jefe",
           progress: 100,
-          salary: "€ 69,201",
+          salary: "69",
         },
         {
           id: 6,
@@ -109,7 +109,7 @@ export default {
           name: "Manuela Rico",
           job: "Manager",
           progress: 15,
-          salary: "€ 99,201",
+          salary: "99",
         },
       ],
     };
