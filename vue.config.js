@@ -46,6 +46,15 @@ module.exports = {
       enableInSFC: false,
     },
   },
+  devServer: {
+    proxy: {
+      "/": {
+        target: "https://ramas-backend-qa.herokuapp.com",
+        changeOrigin: true,
+        pathRewrite: { "^/": "" },
+      },
+    }
+  },
   css: {
     // Enable CSS source maps.
     sourceMap: process.env.NODE_ENV !== "production",
