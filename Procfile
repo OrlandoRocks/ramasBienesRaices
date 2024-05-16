@@ -1,1 +1,1 @@
-web: serve -s dist
+web: bin/start-nginx
