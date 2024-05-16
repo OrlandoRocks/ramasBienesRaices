@@ -1,0 +1,3 @@
+#!/bin/sh
+
+nginx -c $HOME/config/nginx.conf.erb
