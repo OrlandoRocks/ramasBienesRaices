@@ -35,9 +35,7 @@ module.exports = {
           VUE_APP_AWS_SECRET_ACCESS: JSON.stringify(
             process.env.VUE_APP_AWS_SECRET_ACCESS
           ),
-          VUE_APP_BACKEND_URL: JSON.stringify(
-            process.env.VUE_APP_BACKEND_URL
-          ),
+          VUE_APP_BACKEND_URL: JSON.stringify(process.env.VUE_APP_BACKEND_URL),
           VUE_APP_I18N_FALLBACK_LOCALE: JSON.stringify(
             process.env.VUE_APP_I18N_FALLBACK_LOCALE
           ),
