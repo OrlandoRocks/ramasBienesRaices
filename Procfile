@@ -1,1 +1,1 @@
-web: bin/start-nginx
+web: http-server dist -p $PORT
