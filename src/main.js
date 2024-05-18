@@ -2,24 +2,29 @@ import Vue from "vue";
 import VueRouter from "vue-router";
 import RouterPrefetch from "vue-router-prefetch";
 import DashboardPlugin from "./plugins/dashboard-plugin";
+import runtimeEnv from '@mars/heroku-js-runtime-env';
 import App from "./App.vue";
 import router from "./router/router";
 import store from "./store";
 import i18n from "./i18n";
 import "./registerServiceWorker";
 
+const env = runtimeEnv();
 Vue.config.productionTip = false;
 
 Vue.use(DashboardPlugin);
 Vue.use(VueRouter);
 Vue.use(RouterPrefetch);
 
-new Vue({
-  el: "#app",
-  render: (h) => h(App),
-  router,
-  i18n,
-  store,
+env.then((env) => {
+  Vue.prototype.$env = env;
+  new Vue({
+    el: "#app",
+    render: (h) => h(App),
+    router,
+    i18n,
+    store,
+  });
 });
 
 let localAuthToken = localStorage.getItem("auth_token");
