@@ -1,5 +1,6 @@
 const path = require("path");
 const webpack = require("webpack");
+const dotenv = require('dotenv');
 
 function resolveSrc(_path) {
   return path.join(__dirname, _path);
@@ -26,8 +27,24 @@ module.exports = {
       },
     },
     plugins: [
-      new webpack.optimize.LimitChunkCountPlugin({
-        maxChunks: 6,
+      new webpack.DefinePlugin({
+        "process.env": {
+          VUE_APP_AWS_ACCESS_KEY_ID: JSON.stringify(
+            process.env.VUE_APP_AWS_ACCESS_KEY_ID
+          ),
+          VUE_APP_AWS_SECRET_ACCESS: JSON.stringify(
+            process.env.VUE_APP_AWS_SECRET_ACCESS
+          ),
+          VUE_APP_BACKEND_URL: JSON.stringify(
+            process.env.VUE_APP_BACKEND_URL
+          ),
+          VUE_APP_I18N_FALLBACK_LOCALE: JSON.stringify(
+            process.env.VUE_APP_I18N_FALLBACK_LOCALE
+          ),
+          VUE_APP_AWS_REGION: JSON.stringify(process.env.VUE_APP_AWS_REGION),
+          VUE_APP_I18N_LOCALE: JSON.stringify(process.env.VUE_APP_I18N_LOCALE),
+          PORT: JSON.stringify(process.env.PORT),
+        },
       }),
     ],
   },
