@@ -51,8 +51,8 @@ const RegularForms = () => import("src/pages/Forms/RegularForms.vue");
 const ExtendedForms = () => import("src/pages/Forms/ExtendedForms.vue");
 const ValidationForms = () => import("src/pages/Forms/ValidationForms.vue");
 const Wizard = () => import("src/pages/Forms/Wizard.vue");
-const ResidentialForm = () =>
-  import("src/pages/Residential/ResidentialForm.vue");
+const ResidentialForm= () =>
+  import("@/pages/Residential/ResidentialForm.vue");
 const ClientForm = () => import("src/pages/Clients/ClientForm.vue");
 
 // Maps pages

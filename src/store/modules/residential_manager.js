@@ -97,8 +97,7 @@ const actions = {
         .post(`${BASE_URL}/residentials`, payload, config)
         .then((response) => {
           state.residentials.push(response.data);
-          router.push("/residentials");
-          resolve(response);
+          resolve(response.data);
         })
         .catch((error) => {
           console.error(error);

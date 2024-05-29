@@ -50,7 +50,7 @@
               <div class="col-sm-4">
                 <ValidationProvider
                   name="email"
-                  rules=""
+                  rules="email|required"
                   v-slot="{ passed, failed, errors }"
                 >
                   <base-input
@@ -199,17 +199,16 @@
             </div>
 
             <div class="row">
-              <label class="col-sm-2 col-form-label">Estado Civil:</label
-              >
+              <label class="col-sm-2 col-form-label">Estado Civil:</label>
               <div class="col-sm-4">
                 <ValidationProvider
-                    name="estado civil"
-                    v-slot="{ passed, failed, errors }"
+                  name="estado civil"
+                  v-slot="{ passed, failed, errors }"
                 >
                   <base-input
-                      v-model="civil_status"
-                      :error="errors[0]"
-                      :class="[
+                    v-model="civil_status"
+                    :error="errors[0]"
+                    :class="[
                       { 'has-success': passed },
                       { 'has-danger': failed },
                     ]"
@@ -220,11 +219,21 @@
 
             <div class="row">
               <label class="col-sm-2 col-form-label">Credencial:</label>
-              <div class="col-sm-7">
-                <image-upload
-                  @change="onImageChange"
-                  select-text="Seleccionar Imagen"
-                />
+              <div class="col-sm-4">
+                <ValidationProvider
+                  name="credential"
+                  rules="required"
+                  v-slot="{ passed, failed, errors }"
+                >
+                  <base-input
+                    v-model="credential"
+                    :error="errors[0]"
+                    :class="[
+                      { 'has-success': passed },
+                      { 'has-danger': failed },
+                    ]"
+                  ></base-input>
+                </ValidationProvider>
               </div>
             </div>
 
@@ -255,7 +264,6 @@ import {
 } from "vee-validate/dist/rules";
 import { DatePicker, Select, Option } from "element-ui";
 import { mapActions, mapGetters } from "vuex";
-import { ImageUpload } from "src/components/index";
 import locationData from "@/assets/locations_mexico.json";
 
 extend("required", required);
@@ -270,7 +278,6 @@ export default {
     [DatePicker.name]: DatePicker,
     [Option.name]: Option,
     [Select.name]: Select,
-    ImageUpload,
   },
   computed: {
     ...mapGetters(["getClientById"]),
@@ -314,48 +321,20 @@ export default {
 
     async submit() {
       this.isSubmitting = true;
-      const imageFile = this.image;
-      this.$store
-        .dispatch("s3/getPresignedUrl", this.image.name)
-        .then((presignedUrl) => {
-          this.$store
-            .dispatch("s3/uploadFileToS3", {
-              url: presignedUrl.url,
-              file: imageFile,
-            })
-            .then((response) => {
-              console.log(response);
-              this.image = response.config.url;
-              this.createClient({
-                full_name: this.full_name,
-                code: this.code,
-                email: this.email,
-                phone_number: this.phone_number,
-                birthday: this.birthday,
-                image: this.image,
-                rfc: this.rfc,
-                address: this.address,
-                zip_code: this.zip_code,
-                civil_status: this.civil_status,
-                state: this.state,
-                city: this.city,
-              });
-            })
-            .catch((error) => {
-              console.log(error);
-            });
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-      // await this.createClient({
-      //   full_name: this.full_name,
-      //   code: this.code,
-      //   email: this.email,
-      //   phone: this.phone,
-      //   birthday: this.birthday,
-      //   image: this.image,
-      // });
+      await this.createClient({
+        full_name: this.full_name,
+        code: this.code,
+        email: this.email,
+        phone_number: this.phone_number,
+        birthday: this.birthday,
+        image: this.image,
+        rfc: this.rfc,
+        address: this.address,
+        zip_code: this.zip_code,
+        civil_status: this.civil_status,
+        state: this.state,
+        city: this.city,
+      });
       this.isSubmitting = false;
     },
     onImageChange(file) {
@@ -370,7 +349,6 @@ export default {
 </script>
 
 <style scoped>
-
 .clickable {
   cursor: pointer;
 }

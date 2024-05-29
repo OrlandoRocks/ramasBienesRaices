@@ -230,7 +230,7 @@ export default {
             this.deleteRow(row);
             swal.fire({
               title: "Eliminado!",
-              text: `You deleted ${row.name}`,
+              text: `Has Borrado: ${row.name}`,
               icon: "success",
               confirmButtonClass: "btn btn-success btn-fill",
               buttonsStyling: false,
