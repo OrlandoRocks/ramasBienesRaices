@@ -14,6 +14,7 @@ const state = {
     email: null,
   },
   users: [],
+  residentials: [],
 };
 const getters = {
   getAuthToken(state) {
@@ -38,6 +39,9 @@ const getters = {
     const loggedOut =
       state.auth_token == null || state.auth_token == JSON.stringify(null);
     return !loggedOut;
+  },
+  getResidentialsList(state) {
+    return state.residentials;
   },
 };
 const actions = {
@@ -142,6 +146,33 @@ const actions = {
         });
     });
   },
+  residentialsList({ commit }) {
+    const config = {
+      headers: {
+        Authorization: state.auth_token,
+      },
+    };
+    return new Promise((resolve, reject) => {
+      axios
+        .get(`${BASE_URL}/residentials-data`, config)
+        .then((response) => {
+          const formattedResidentials = response.data.data.map((residential) => {
+            const name = residential.attributes.name || "Sin nombre";
+            
+            return {
+              id: residential.id,
+              name: name
+            };
+          });
+          commit("setResidentials", formattedResidentials);
+          resolve(response);
+        })
+        .catch((error) => {
+          commit("setError", error);
+          reject(error);
+        });
+    });
+  },
 };
 const mutations = {
   setUserInfo(state, data) {
@@ -173,6 +204,9 @@ const mutations = {
     localStorage.removeItem("auth_token");
     axios.defaults.headers.common["Authorization"] = null;
     router.push({ name: "Login" });
+  },
+  setResidentials(state, data) {
+    state.residentials = data;
   },
 };
 export default {
