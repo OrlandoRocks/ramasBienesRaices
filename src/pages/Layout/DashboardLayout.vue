@@ -38,6 +38,19 @@
         ></sidebar-item>
         <sidebar-item
           :link="{
+            name: $t('sidebar.expenses'),
+            icon: 'tim-icons icon-image-02',
+          }"
+        >
+          <sidebar-item
+            :link="{ name: $t('sidebar.list'), path: '/expenses' }"
+          ></sidebar-item>
+          <sidebar-item
+            :link="{ name: $t('sidebar.new'), path: '/expenses/new' }"
+          ></sidebar-item>
+        </sidebar-item>
+        <sidebar-item
+          :link="{
             name: $t('sidebar.charts'),
             icon: 'tim-icons icon-chart-bar-32',
             path: '/charts',

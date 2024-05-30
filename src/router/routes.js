@@ -54,6 +54,8 @@ const Wizard = () => import("src/pages/Forms/Wizard.vue");
 const ResidentialForm = () =>
   import("src/pages/Residential/ResidentialForm.vue");
 const ClientForm = () => import("src/pages/Clients/ClientForm.vue");
+const ExpenseForm = () =>
+  import("src/pages/Expense/ExpenseForm.vue");
 
 // Maps pages
 const GoogleMaps = () =>
@@ -77,6 +79,8 @@ const Register = () =>
 const ResidentialsTable = () =>
   import("src/pages/Residential/ResidentialTable.vue");
 const ClientTable = () => import("src/pages/Clients/ClientTable.vue");
+const ExpensesTable = () =>
+  import("src/pages/Expense/ExpenseTable.vue");
 
 const RegularTables = () =>
   import(/* webpackChunkName: "tables" */ "src/pages/Tables/RegularTables.vue");
@@ -266,6 +270,31 @@ let clientsMenu = {
   meta: { requiresAuth: true },
 };
 
+let expensesMenu = {
+  path: "/expenses",
+  component: DashboardLayout,
+  name: "Expenses",
+  redirect: "/expenses",
+  children: [
+    {
+      path: "",
+      name: "Expenses",
+      components: { default: ExpensesTable },
+    },
+    {
+      path: "new",
+      name: "CreateExpense",
+      components: { default: ExpenseForm },
+    },
+    {
+      path: ":id/edit",
+      name: "EditExpense",
+      components: { default: ExpenseForm },
+    },
+  ],
+  meta: { requiresAuth: true },
+};
+
 let authPages = {
   path: "/",
   component: AuthLayout,
@@ -297,6 +326,7 @@ const routes = [
   mapsMenu,
   residentialsMenu,
   clientsMenu,
+  expensesMenu,
   authPages,
   {
     path: "/",
