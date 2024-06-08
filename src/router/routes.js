@@ -51,9 +51,10 @@ const RegularForms = () => import("src/pages/Forms/RegularForms.vue");
 const ExtendedForms = () => import("src/pages/Forms/ExtendedForms.vue");
 const ValidationForms = () => import("src/pages/Forms/ValidationForms.vue");
 const Wizard = () => import("src/pages/Forms/Wizard.vue");
-const ResidentialForm = () =>
-  import("src/pages/Residential/ResidentialForm.vue");
+const ResidentialForm = () => import("@/pages/Residential/ResidentialForm.vue");
+const LandForm = () => import("src/pages/Land/LandForm.vue");
 const ClientForm = () => import("src/pages/Clients/ClientForm.vue");
+const ExpenseForm = () => import("src/pages/Expense/ExpenseForm.vue");
 
 // Maps pages
 const GoogleMaps = () =>
@@ -76,7 +77,9 @@ const Register = () =>
 // TableList pages
 const ResidentialsTable = () =>
   import("src/pages/Residential/ResidentialTable.vue");
+const LandsTable = () => import("src/pages/Land/LandTable.vue");
 const ClientTable = () => import("src/pages/Clients/ClientTable.vue");
+const ExpensesTable = () => import("src/pages/Expense/ExpenseTable.vue");
 
 const RegularTables = () =>
   import(/* webpackChunkName: "tables" */ "src/pages/Tables/RegularTables.vue");
@@ -132,6 +135,7 @@ let componentsMenu = {
   ],
   meta: { requiresAuth: true },
 };
+
 let formsMenu = {
   path: "/forms",
   component: DashboardLayout,
@@ -219,7 +223,7 @@ let mapsMenu = {
 let residentialsMenu = {
   path: "/residentials",
   component: DashboardLayout,
-  name: "Residentials",
+  name: "ResidentialsHome",
   redirect: "/residentials",
   children: [
     {
@@ -241,10 +245,34 @@ let residentialsMenu = {
   meta: { requiresAuth: true },
 };
 
+let landsMenu = {
+  path: "/lands",
+  component: DashboardLayout,
+  name: "LandsHome",
+  redirect: "/lands",
+  children: [
+    {
+      path: "",
+      name: "Lands",
+      components: { default: LandsTable },
+    },
+    {
+      path: "new",
+      name: "CreateLand",
+      components: { default: LandForm },
+    },
+    {
+      path: ":id/edit",
+      name: "EditLand",
+      components: { default: LandForm },
+    },
+  ],
+};
+
 let clientsMenu = {
   path: "/clients",
   component: DashboardLayout,
-  name: "Clients",
+  name: "ClientsHome",
   redirect: "/clients",
   children: [
     {
@@ -259,8 +287,33 @@ let clientsMenu = {
     },
     {
       path: ":id/edit",
-      name: "EditResidential",
+      name: "EditClient",
       components: { default: ClientForm },
+    },
+  ],
+  meta: { requiresAuth: true },
+};
+
+let expensesMenu = {
+  path: "/expenses",
+  component: DashboardLayout,
+  name: "ExpensesHome",
+  redirect: "/expenses",
+  children: [
+    {
+      path: "",
+      name: "Expenses",
+      components: { default: ExpensesTable },
+    },
+    {
+      path: "new",
+      name: "CreateExpense",
+      components: { default: ExpenseForm },
+    },
+    {
+      path: ":id/edit",
+      name: "EditExpense",
+      components: { default: ExpenseForm },
     },
   ],
   meta: { requiresAuth: true },
@@ -296,7 +349,9 @@ const routes = [
   tablesMenu,
   mapsMenu,
   residentialsMenu,
+  landsMenu,
   clientsMenu,
+  expensesMenu,
   authPages,
   {
     path: "/",

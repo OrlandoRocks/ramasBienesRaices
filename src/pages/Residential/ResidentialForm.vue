@@ -119,7 +119,6 @@
             >
           </div>
         </card>
-        {{ lands }}
       </form>
     </ValidationObserver>
   </div>
@@ -199,6 +198,7 @@ export default {
               message: "Fraccionamiento actualizado con éxito",
               icon: "tim-icons icon-bell-55",
             });
+            return true;
           })
           .catch((error) => {
             console.log(error);
@@ -219,6 +219,7 @@ export default {
               message: "Fraccionamiento creado con éxito",
               icon: "tim-icons icon-bell-55",
             });
+            return true;
           })
           .catch((error) => {
             console.log(error);
@@ -230,6 +231,7 @@ export default {
               message: "Error al crear el fraccionamiento",
               icon: "tim-icons icon-bell-55",
             });
+            return false;
           });
       }
     },

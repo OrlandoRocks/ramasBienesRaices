@@ -33,10 +33,11 @@ export default {
           .then((response) => {
             commit("setPresignedUrl", {
               url: response.data.url,
-              path: response.data.path
+              path: response.data.path,
             });
             resolve(response.data);
-          }).catch((error) => {
+          })
+          .catch((error) => {
             console.error(error);
             reject(error);
           });

@@ -1,7 +1,7 @@
 <template>
   <div class="content">
     <div class="col-md-8 ml-auto mr-auto">
-      <h2 class="text-center">Fraccionamientos</h2>
+      <h2 class="text-center">Gastos</h2>
     </div>
     <div class="row mt-5">
       <div class="col-12">
@@ -25,7 +25,7 @@
                 >
                 </el-option>
               </el-select>
-              <base-button @click="goToCreateResidential" type="info">
+              <base-button @click="goToCreateExpense" type="info">
                 <i class="tim-icons icon-simple-add"> </i> Crear Nuevo
               </base-button>
               <base-input>
@@ -50,17 +50,8 @@
                 :label="column.label"
               >
               </el-table-column>
-              <el-table-column :min-width="135" align="right" label="Actions">
+              <el-table-column :min-width="135" align="right" label="Acciones">
                 <div slot-scope="props">
-                  <base-button
-                    @click.native="handleLike(props.$index, props.row)"
-                    class="like btn-link"
-                    type="info"
-                    size="sm"
-                    icon
-                  >
-                    <i class="tim-icons icon-heart-2"></i>
-                  </base-button>
                   <base-button
                     @click.native="handleEdit(props.$index, props.row)"
                     class="edit btn-link"
@@ -112,7 +103,6 @@ import { BasePagination } from "src/components";
 import Fuse from "fuse.js";
 import swal from "sweetalert2";
 import { mapGetters, mapActions } from "vuex";
-
 export default {
   components: {
     BasePagination,
@@ -122,9 +112,9 @@ export default {
     [TableColumn.name]: TableColumn,
   },
   computed: {
-    ...mapGetters(["getResidentials"]),
+    ...mapGetters(["getExpenses"]),
     tableData() {
-      return this.getResidentials;
+      return this.getExpenses;
     },
     queriedData() {
       let result = this.tableData;
@@ -158,17 +148,12 @@ export default {
         total: 0,
       },
       searchQuery: "",
-      propsToSearch: ["name", "address", "user_name"],
+      propsToSearch: ["residential_name", "user_name"],
       tableColumns: [
         {
-          prop: "name",
-          label: "Nombre",
+          prop: "residential_name",
+          label: "Nombre Fraccionamiento",
           minWidth: 200,
-        },
-        {
-          prop: "address",
-          label: "Direccion",
-          minWidth: 250,
         },
         {
           prop: "user_name",
@@ -176,18 +161,28 @@ export default {
           minWidth: 120,
         },
         {
-          prop: "lands_count",
-          label: "Lotes",
+          prop: "account",
+          label: "Cuenta",
           minWidth: 100,
         },
         {
-          prop: "cost",
-          label: "Costo/precio",
+          prop: "department",
+          label: "Departamento",
           minWidth: 120,
         },
         {
-          prop: "total_expenses",
-          label: "Gastos",
+          prop: "expense_type",
+          label: "Tipo",
+          minWidth: 120,
+        },
+        {
+          prop: "comments",
+          label: "Comentarios",
+          minWidth: 120,
+        },
+        {
+          prop: "amount",
+          label: "Cantidad",
           minWidth: 120,
         },
       ],
@@ -196,19 +191,9 @@ export default {
     };
   },
   methods: {
-    ...mapActions(["fetchResidentials", "deleteResidential"]),
-    handleLike(index, row) {
-      swal.fire({
-        title: `Has marcado como favorito el ${row.name}`,
-        buttonsStyling: false,
-        icon: "success",
-        customClass: {
-          confirmButton: "btn btn-success btn-fill",
-        },
-      });
-    },
+    ...mapActions(["fetchExpenses", "deleteExpense"]),
     handleEdit(index, row) {
-      this.$router.push({ name: "EditResidential", params: { id: row.id } });
+      this.$router.push({ name: "EditExpense", params: { id: row.id } });
     },
     handleDelete(index, row) {
       swal
@@ -226,11 +211,11 @@ export default {
         })
         .then((result) => {
           if (result.value) {
-            this.deleteResidential(row.id);
+            this.deleteExpense(row.id);
             this.deleteRow(row);
             swal.fire({
               title: "Eliminado!",
-              text: `Has Borrado: ${row.name}`,
+              text: `You deleted ${row}`,
               icon: "success",
               confirmButtonClass: "btn btn-success btn-fill",
               buttonsStyling: false,
@@ -246,18 +231,18 @@ export default {
         this.tableData.splice(indexToDelete, 1);
       }
     },
-    goToCreateResidential() {
-      this.$router.push({ name: "CreateResidential" });
+    goToCreateExpense() {
+      this.$router.push({ name: "CreateExpense" });
     },
   },
   mounted() {
-    this.fuseSearch = new Fuse(this.getResidentials, {
-      keys: ["name", "address", "user_name"],
+    this.fuseSearch = new Fuse(this.getExpenses, {
+      keys: ["residential_name", "user_name"],
       threshold: 0.3,
     });
   },
   created() {
-    this.$store.dispatch("fetchResidentials");
+    this.$store.dispatch("fetchExpenses");
   },
   watch: {
     searchQuery(value) {

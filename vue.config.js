@@ -1,6 +1,5 @@
 const path = require("path");
 const webpack = require("webpack");
-const dotenv = require('dotenv');
 
 function resolveSrc(_path) {
   return path.join(__dirname, _path);
@@ -60,15 +59,6 @@ module.exports = {
       localeDir: "locales",
       enableInSFC: false,
     },
-  },
-  devServer: {
-    proxy: {
-      "/": {
-        target: "https://ramas-backend-qa.herokuapp.com",
-        changeOrigin: true,
-        pathRewrite: { "^/": "" },
-      },
-    }
   },
   css: {
     // Enable CSS source maps.

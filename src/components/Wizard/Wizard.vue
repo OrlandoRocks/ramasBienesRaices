@@ -114,15 +114,15 @@ export default {
     },
     prevButtonText: {
       type: String,
-      default: "Previous",
+      default: "Atras",
     },
     nextButtonText: {
       type: String,
-      default: "Next",
+      default: "Adelante",
     },
     finishButtonText: {
       type: String,
-      default: "Finish",
+      default: "Terminar",
     },
     vertical: {
       type: Boolean,

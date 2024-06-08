@@ -134,7 +134,7 @@ const actions = {
             monthly_expenses: client.monthly_expenses,
             comments: client.comments,
             image: client.image,
-          })
+          });
           resolve(client);
         })
         .catch((error) => {
@@ -155,6 +155,7 @@ const actions = {
         .then((response) => {
           state.clients.push(response.data);
           commit("setClients", state.clients);
+          router.push("/clients");
           resolve(response.data);
         })
         .catch((error) => {

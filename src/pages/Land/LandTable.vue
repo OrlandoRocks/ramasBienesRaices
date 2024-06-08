@@ -1,7 +1,7 @@
 <template>
   <div class="content">
     <div class="col-md-8 ml-auto mr-auto">
-      <h2 class="text-center">Fraccionamientos</h2>
+      <h2 class="text-center">Terrenos</h2>
     </div>
     <div class="row mt-5">
       <div class="col-12">
@@ -25,7 +25,7 @@
                 >
                 </el-option>
               </el-select>
-              <base-button @click="goToCreateResidential" type="info">
+              <base-button @click="goToCreateLand" type="info">
                 <i class="tim-icons icon-simple-add"> </i> Crear Nuevo
               </base-button>
               <base-input>
@@ -53,15 +53,6 @@
               <el-table-column :min-width="135" align="right" label="Actions">
                 <div slot-scope="props">
                   <base-button
-                    @click.native="handleLike(props.$index, props.row)"
-                    class="like btn-link"
-                    type="info"
-                    size="sm"
-                    icon
-                  >
-                    <i class="tim-icons icon-heart-2"></i>
-                  </base-button>
-                  <base-button
                     @click.native="handleEdit(props.$index, props.row)"
                     class="edit btn-link"
                     type="warning"
@@ -72,12 +63,12 @@
                   </base-button>
                   <base-button
                     @click.native="handleDelete(props.$index, props.row)"
-                    class="remove btn-link"
+                    class="delete btn-link"
                     type="danger"
                     size="sm"
                     icon
                   >
-                    <i class="tim-icons icon-simple-remove"></i>
+                    <i class="tim-icons icon-trash-simple"></i>
                   </base-button>
                 </div>
               </el-table-column>
@@ -89,8 +80,7 @@
           >
             <div class="">
               <p class="card-category">
-                Mostrando del {{ from + 1 }} al {{ to }} de
-                {{ total }} resultados
+                mostrando de {{ from + 1 }} a {{ to }} de {{ total }} registros
               </p>
             </div>
             <base-pagination
@@ -98,33 +88,63 @@
               v-model="pagination.currentPage"
               :per-page="pagination.perPage"
               :total="total"
-            >
-            </base-pagination>
+            ></base-pagination>
           </div>
         </card>
       </div>
     </div>
   </div>
 </template>
+
 <script>
 import { Table, TableColumn, Select, Option } from "element-ui";
-import { BasePagination } from "src/components";
+import { BasePagination } from "@/components";
 import Fuse from "fuse.js";
 import swal from "sweetalert2";
-import { mapGetters, mapActions } from "vuex";
+import { mapActions, mapGetters } from "vuex";
 
 export default {
+  name: "LandTable",
   components: {
+    ElTable: Table,
+    ElTableColumn: TableColumn,
+    ElSelect: Select,
+    ElOption: Option,
     BasePagination,
-    [Select.name]: Select,
-    [Option.name]: Option,
-    [Table.name]: Table,
-    [TableColumn.name]: TableColumn,
+  },
+  data() {
+    return {
+      pagination: {
+        perPage: 10,
+        perPageOptions: [10, 20, 30, 40, 50],
+        currentPage: 1,
+        total: 0,
+      },
+      searchQuery: "",
+      propsToSearch: [
+        "residential_name",
+        "land_code",
+        "address",
+        "house_number",
+        "size",
+        "price",
+      ],
+      tableColumns: [
+        { prop: "residential_name", label: "Fraccionamiento", minWidth: 200 },
+        { prop: "land_code", label: "Codigo", minWidth: 100 },
+        { prop: "address", label: "Dirección", minWidth: 250 },
+        { prop: "house_number", label: "Número de Casa", minWidth: 100 },
+        { prop: "size", label: "Tamaño", minWidth: 100 },
+        { prop: "price", label: "Precio", minWidth: 100 },
+      ],
+      searchedData: [],
+      fuseSearch: null,
+    };
   },
   computed: {
-    ...mapGetters(["getResidentials"]),
+    ...mapGetters(["getLands"]),
     tableData() {
-      return this.getResidentials;
+      return this.getLands;
     },
     queriedData() {
       let result = this.tableData;
@@ -149,88 +169,30 @@ export default {
         : this.tableData.length;
     },
   },
-  data() {
-    return {
-      pagination: {
-        perPage: 5,
-        currentPage: 1,
-        perPageOptions: [5, 10, 25, 50],
-        total: 0,
-      },
-      searchQuery: "",
-      propsToSearch: ["name", "address", "user_name"],
-      tableColumns: [
-        {
-          prop: "name",
-          label: "Nombre",
-          minWidth: 200,
-        },
-        {
-          prop: "address",
-          label: "Direccion",
-          minWidth: 250,
-        },
-        {
-          prop: "user_name",
-          label: "Responsable",
-          minWidth: 120,
-        },
-        {
-          prop: "lands_count",
-          label: "Lotes",
-          minWidth: 100,
-        },
-        {
-          prop: "cost",
-          label: "Costo/precio",
-          minWidth: 120,
-        },
-        {
-          prop: "total_expenses",
-          label: "Gastos",
-          minWidth: 120,
-        },
-      ],
-      searchedData: [],
-      fuseSearch: null,
-    };
-  },
   methods: {
-    ...mapActions(["fetchResidentials", "deleteResidential"]),
-    handleLike(index, row) {
-      swal.fire({
-        title: `Has marcado como favorito el ${row.name}`,
-        buttonsStyling: false,
-        icon: "success",
-        customClass: {
-          confirmButton: "btn btn-success btn-fill",
-        },
-      });
-    },
+    ...mapActions(["fetchLands", "deleteLand"]),
     handleEdit(index, row) {
-      this.$router.push({ name: "EditResidential", params: { id: row.id } });
+      this.$router.push(`/lands/${row.id}/edit`);
     },
     handleDelete(index, row) {
       swal
         .fire({
-          title: "Estas seguro?",
-          text: `No podras revertir estos cambios!`,
+          title: "¿Estas seguro?",
+          text: "No podras revertir esta accion",
           icon: "warning",
           showCancelButton: true,
-          customClass: {
-            confirmButton: "btn btn-success btn-fill",
-            cancelButton: "btn btn-danger btn-fill",
-          },
-          confirmButtonText: "Si, Borralo!",
-          buttonsStyling: false,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Si, borrar",
+          cancelButtonText: "Cancelar",
         })
         .then((result) => {
           if (result.value) {
-            this.deleteResidential(row.id);
+            this.deleteLand(row.id);
             this.deleteRow(row);
             swal.fire({
               title: "Eliminado!",
-              text: `Has Borrado: ${row.name}`,
+              text: `You deleted ${row.name}`,
               icon: "success",
               confirmButtonClass: "btn btn-success btn-fill",
               buttonsStyling: false,
@@ -246,18 +208,25 @@ export default {
         this.tableData.splice(indexToDelete, 1);
       }
     },
-    goToCreateResidential() {
-      this.$router.push({ name: "CreateResidential" });
+    goToCreateLand() {
+      this.$router.push({ name: "CreateLand" });
     },
   },
   mounted() {
-    this.fuseSearch = new Fuse(this.getResidentials, {
-      keys: ["name", "address", "user_name"],
+    this.fuseSearch = new Fuse(this.getLands, {
+      keys: [
+        "residential_name",
+        "land_code",
+        "address",
+        "house_number",
+        "size",
+        "price",
+      ],
       threshold: 0.3,
     });
   },
   created() {
-    this.$store.dispatch("fetchResidentials");
+    this.fetchLands();
   },
   watch: {
     searchQuery(value) {
@@ -271,12 +240,5 @@ export default {
   },
 };
 </script>
-<style>
-.pagination-select,
-.search-input {
-  width: 200px;
-}
-.swal2-icon-content {
-  font-size: inherit !important;
-}
-</style>
+
+<style scoped></style>

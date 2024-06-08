@@ -4,6 +4,7 @@
     "shortTitle": "OR",
     "dashboard": "Dashboard",
     "neighborhood": "Fraccionamientos",
+    "lands": "Terrenos",
     "clients": "Clientes",
     "list": "Lista",
     "new": "Crear",
@@ -40,6 +41,7 @@
     "vectorMaps": "Mapas Vectoriales",
     "widgets": "Herramientas",
     "charts": "Gráficos",
-    "calendar": "Calendario"
+    "calendar": "Calendario",
+    "expenses": "Gastos"
   }
 }
