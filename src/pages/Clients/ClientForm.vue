@@ -88,9 +88,7 @@
                 >Fecha de Nacimiento:</label
               >
               <div class="col-sm-4">
-                <ValidationProvider
-                  name="bithday"
-                >
+                <ValidationProvider name="bithday">
                   <base-input>
                     <el-date-picker
                       type="date"
@@ -120,9 +118,7 @@
             </div>
 
             <div class="row">
-              <label class="col-sm-2 col-form-label"
-              >Dirección:</label
-              >
+              <label class="col-sm-2 col-form-label">Dirección:</label>
               <div class="col-sm-4">
                 <ValidationProvider
                   name="direccion"

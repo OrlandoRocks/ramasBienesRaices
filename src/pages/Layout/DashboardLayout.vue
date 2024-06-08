@@ -19,21 +19,29 @@
         <sidebar-item
           :link="{
             name: $t('sidebar.neighborhood'),
-            icon: 'tim-icons icon-image-02',
+            icon: 'tim-icons icon-square-pin',
+            path: '/residentials',
           }"
-        >
-          <sidebar-item
-            :link="{ name: $t('sidebar.list'), path: '/residentials' }"
-          ></sidebar-item>
-          <sidebar-item
-            :link="{ name: $t('sidebar.new'), path: '/residentials/new' }"
-          ></sidebar-item>
-        </sidebar-item>
+        ></sidebar-item>
+        <sidebar-item
+          :link="{
+            name: $t('sidebar.lands'),
+            icon: 'tim-icons icon-vector',
+            path: '/lands',
+          }"
+        ></sidebar-item>
         <sidebar-item
           :link="{
             name: $t('sidebar.clients'),
             icon: 'tim-icons icon-badge',
             path: '/clients',
+          }"
+        ></sidebar-item>
+        <sidebar-item
+          :link="{
+            name: $t('sidebar.expenses'),
+            icon: 'tim-icons icon-money-coins',
+            path: '/expenses',
           }"
         ></sidebar-item>
         <sidebar-item

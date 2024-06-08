@@ -9,16 +9,47 @@
           </h4>
           <div>
             <div class="row">
-              <label class="col-sm-2 col-form-label">Tipo</label>
+              <label class="col-sm-2 col-form-label">Fraccionamiento:</label>
               <div class="col-sm-7">
                 <ValidationProvider
-                  name="type"
+                  name="responsable"
+                  rules="required"
+                  v-slot="{ errors }"
+                >
+                  <el-select
+                    class="select-primary"
+                    style="width: 100%; margin-bottom: 10px"
+                    :error="errors[0]"
+                    size="large"
+                    placeholder="Seleccionar el responsable"
+                    v-model="residential_id"
+                  >
+                    <el-option
+                      v-for="option in residentialList"
+                      class="select-primary"
+                      :value="option.id"
+                      :label="`${option.name}`"
+                      :key="option.id"
+                    >
+                    </el-option>
+                  </el-select>
+                  <span class="error-message" v-if="errors.length">{{
+                    errors[0]
+                  }}</span>
+                </ValidationProvider>
+              </div>
+            </div>
+            <div class="row">
+              <label class="col-sm-2 col-form-label">Codigo:</label>
+              <div class="col-sm-7">
+                <ValidationProvider
+                  name="codigo"
                   rules="required"
                   v-slot="{ passed, failed, errors }"
                 >
                   <base-input
                     required
-                    v-model="type"
+                    v-model="land_code"
                     :error="errors[0]"
                     :class="[
                       { 'has-success': passed },
@@ -31,7 +62,7 @@
             </div>
 
             <div class="row">
-              <label class="col-sm-2 col-form-label">Direccion</label>
+              <label class="col-sm-2 col-form-label">Direccion:</label>
               <div class="col-sm-7">
                 <ValidationProvider
                   name="direccion"
@@ -53,10 +84,10 @@
             </div>
 
             <div class="row">
-              <label class="col-sm-2 col-form-label">Cuadra</label>
+              <label class="col-sm-2 col-form-label">Cuadra:</label>
               <div class="col-sm-7">
                 <ValidationProvider
-                  name="block"
+                  name="cuadra"
                   rules="required"
                   v-slot="{ passed, failed, errors }"
                 >
@@ -75,11 +106,11 @@
             </div>
 
             <div class="row">
-              <label class="col-sm-2 col-form-label">Numero de Casa</label>
+              <label class="col-sm-2 col-form-label">Numero de Casa:</label>
               <div class="col-sm-7">
                 <ValidationProvider
-                  name="house_number"
-                  rules="required"
+                  name="numero de casa"
+                  rules="required|numeric"
                   v-slot="{ passed, failed, errors }"
                 >
                   <base-input
@@ -97,16 +128,16 @@
             </div>
 
             <div class="row">
-              <label class="col-sm-2 col-form-label">Costo/Precio</label>
+              <label class="col-sm-2 col-form-label">Tamaño:</label>
               <div class="col-sm-7">
                 <ValidationProvider
-                  name="costo"
+                  name="tamaño"
                   rules="required"
                   v-slot="{ passed, failed, errors }"
                 >
                   <base-input
                     required
-                    v-model="cost"
+                    v-model="size"
                     :error="errors[0]"
                     :class="[
                       { 'has-success': passed },
@@ -117,7 +148,29 @@
                 </ValidationProvider>
               </div>
             </div>
-            <div class="text-center">
+
+            <div class="row">
+              <label class="col-sm-2 col-form-label">Costo/Precio:</label>
+              <div class="col-sm-7">
+                <ValidationProvider
+                  name="costo"
+                  rules="required|numeric"
+                  v-slot="{ passed, failed, errors }"
+                >
+                  <base-input
+                    required
+                    v-model="price"
+                    :error="errors[0]"
+                    :class="[
+                      { 'has-success': passed },
+                      { 'has-danger': failed },
+                    ]"
+                  >
+                  </base-input>
+                </ValidationProvider>
+              </div>
+            </div>
+            <div class="text-center" v-if="create_edit === 'Crear'">
               <base-button
                 @click="handleSubmit(appendLand)"
                 class="btn-round"
@@ -127,7 +180,7 @@
               </base-button>
             </div>
 
-            <el-table :data="lands">
+            <el-table :data="tableData" v-if="create_edit === 'Crear'">
               <el-table-column
                 v-for="column in tableColumns"
                 :key="column.label"
@@ -160,6 +213,14 @@
               </el-table-column>
             </el-table>
           </div>
+          <div class="text-center">
+            <base-button
+              :disabled="isSubmitting"
+              native-type="submit"
+              type="primary"
+              >{{ create_edit }} Terrenos</base-button
+            >
+          </div>
         </card>
       </form>
     </ValidationObserver>
@@ -170,6 +231,7 @@
 import { Table, TableColumn } from "element-ui";
 import { extend } from "vee-validate";
 import { required, numeric } from "vee-validate/dist/rules";
+import { Option, Select } from "element-ui";
 import { mapActions, mapGetters } from "vuex";
 
 extend("required", required);
@@ -180,32 +242,75 @@ export default {
   components: {
     [Table.name]: Table,
     [TableColumn.name]: TableColumn,
+    [Select.name]: Select,
+    [Option.name]: Option,
   },
   data() {
     return {
-      type: "",
+      id: "",
+      land_code: "",
       address: "",
       block: "",
+      size: "",
       house_number: "",
-      cost: "",
+      price: "",
+      residential_id: "",
       lands: [],
+      create_edit: "Crear",
+      isSubmitting: false,
       tableColumns: [
-        { prop: "type", label: "Tipo", minWidth: 100 },
+        { prop: "residential_name", label: "Fraccionamiento", minWidth: 100 },
+        { prop: "land_code", label: "Codigo", minWidth: 100 },
         { prop: "address", label: "Direccion", minWidth: 100 },
         { prop: "block", label: "Cuadra", minWidth: 100 },
         { prop: "house_number", label: "Numero de Casa", minWidth: 100 },
-        { prop: "cost", label: "Costo/Precio", minWidth: 100 },
+        { prop: "price", label: "Costo/Precio", minWidth: 100 },
       ],
     };
   },
+  computed: {
+    ...mapGetters(["getResidentials"]),
+    residentialList() {
+      return this.getResidentials;
+    },
+    tableData() {
+      return this.lands.map((land) => ({
+        ...land,
+        residential_name: this.getResidentialName(land.residential_id),
+      }));
+    },
+  },
   methods: {
-    ...mapActions(["updateResidential"]),
+    ...mapActions([
+      "updateResidential",
+      "updateLand",
+      "fetchLandById",
+      "createLand",
+    ]),
+    loadLandData(id) {
+      this.fetchLandById(id)
+        .then((land) => {
+          this.id = id;
+          this.land_code = land.land_code;
+          this.address = land.address;
+          this.block = land.block;
+          this.house_number = land.house_number;
+          this.size = land.size;
+          this.price = land.price;
+          this.residential_id = land.residential_id;
+          this.create_edit = "Editar";
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
     handleEdit(index, row) {
-      this.type = row.type;
+      this.land_code = row.land_code;
       this.address = row.address;
       this.block = row.block;
       this.house_number = row.house_number;
-      this.cost = row.cost;
+      this.size = row.size;
+      this.price = row.price;
       this.lands.splice(index, 1);
     },
 
@@ -223,26 +328,110 @@ export default {
         return;
       }
       this.lands.push({
-        type: this.type,
+        land_code: this.land_code,
         address: this.address,
         block: this.block,
         house_number: this.house_number,
-        cost: this.cost,
+        size: this.size,
+        price: this.price,
+        residential_id: this.residential_id,
       });
     },
     handleDuplicate() {
       return this.lands.some(
         (land) =>
-          land.type === this.type &&
+          land.land_code === this.land_code &&
           land.address === this.address &&
           land.block === this.block &&
           land.house_number === this.house_number &&
-          land.cost === this.cost
+          land.price === this.price &&
+          land.residential_id === this.residential_id
       );
     },
-    submit() {
-      this.updateResidential({ lands: this.lands });
+    getResidentialName() {
+      const selected = this.residentialList.find(
+        (option) => option.id === this.residential_id
+      );
+      return selected ? selected.name : "";
     },
+    submit() {
+      let data = {
+        land: {
+          land_code: this.land_code,
+          address: this.address,
+          block: this.block,
+          house_number: this.house_number,
+          size: this.size,
+          price: this.price,
+          residential_id: this.residential_id,
+        },
+      };
+      this.isSubmitting = true;
+      if (this.create_edit === "Editar") {
+        data.land.id = this.id;
+        this.updateLand(data)
+          .then(() => {
+            this.$notify({
+              title: "Success",
+              type: "success",
+              message: "Terreno actualizado con éxito",
+              icon: "tim-icons icon-bell-55",
+            });
+          })
+          .catch((error) => {
+            console.log(error);
+            this.isSubmitting = false;
+            this.$notify({
+              title: "Error",
+              type: "danger",
+              message: "Error al actualizar el fraccionamiento",
+              icon: "tim-icons icon-bell-55",
+            });
+          });
+      } else {
+        this.createLand({ lands: this.lands })
+          .then(() => {
+            this.$notify({
+              title: "Success",
+              type: "success",
+              message: "Terrenos creados con éxito",
+              icon: "tim-icons icon-bell-55",
+            });
+          })
+          .catch((error) => {
+            console.log(error);
+            this.isSubmitting = false;
+            this.resetData();
+            this.$notify({
+              title: "Error",
+              type: "danger",
+              message: "Error al crear el fraccionamiento",
+              icon: "tim-icons icon-bell-55",
+            });
+          });
+      }
+    },
+    resetData() {
+      this.land_code = "";
+      this.address = "";
+      this.block = "";
+      this.house_number = "";
+      this.size = "";
+      this.price = "";
+      this.residential_id = "";
+      this.lands = [];
+      this.isSubmitting = false;
+    },
+  },
+  mounted() {
+    this.$store.dispatch("fetchResidentials");
+  },
+  created() {
+    const landId = this.$route.params.id;
+    if (landId) {
+      this.loadLandData(landId);
+    }
+    this.create_edit = landId ? "Editar" : "Crear";
   },
 };
 </script>

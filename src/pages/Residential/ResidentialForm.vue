@@ -119,7 +119,6 @@
             >
           </div>
         </card>
-        {{ lands }}
       </form>
     </ValidationObserver>
   </div>
@@ -129,7 +128,6 @@ import { extend } from "vee-validate";
 import { required, double, regex, confirmed } from "vee-validate/dist/rules";
 import { Option, Select } from "element-ui";
 import { mapActions, mapGetters } from "vuex";
-import { resolve } from "url";
 
 extend("required", required);
 extend("double", double);
@@ -181,68 +179,61 @@ export default {
         });
     },
     submit() {
-      return new Promise((resolve) => {
-        this.isSubmitting = true;
-        let data = {
-          residential: {
-            name: this.name,
-            address: this.address,
-            cost: this.cost,
-            user_id: this.user_id,
-          },
-        };
-        if (this.create_edit === "Editar") {
-          data.residential.id = this.id;
-          this.updateResidential(data)
-            .then((res) => {
-              this.$emit("on-validated", res);
-              this.$notify({
-                title: "Success",
-                type: "success",
-                message: "Fraccionamiento actualizado con éxito",
-                icon: "tim-icons icon-bell-55",
-              });
-              resolve(true);
-            })
-            .catch((error) => {
-              console.log(error);
-              this.isSubmitting = false;
-              this.$notify({
-                title: "Error",
-                type: "danger",
-                message: "Error al actualizar el fraccionamiento",
-                icon: "tim-icons icon-bell-55",
-              });
-              resolve(false);
+      this.isSubmitting = true;
+      let data = {
+        residential: {
+          name: this.name,
+          address: this.address,
+          cost: this.cost,
+          user_id: this.user_id,
+        },
+      };
+      if (this.create_edit === "Editar") {
+        data.residential.id = this.id;
+        this.updateResidential(data)
+          .then(() => {
+            this.$notify({
+              title: "Success",
+              type: "success",
+              message: "Fraccionamiento actualizado con éxito",
+              icon: "tim-icons icon-bell-55",
             });
-        } else {
-          this.createResidential(data)
-            .then((res) => {
-              console.log(res);
-              this.fetchResidentialById(res.id);
-              this.$emit("on-validated", res);
-              this.$notify({
-                title: "Success",
-                type: "success",
-                message: "Fraccionamiento creado con éxito",
-                icon: "tim-icons icon-bell-55",
-              });
-              resolve(true);
-            })
-            .catch((error) => {
-              console.log(error);
-              this.isSubmitting = false;
-              this.resetData();
-              this.$notify({
-                title: "Error",
-                type: "danger",
-                message: "Error al crear el fraccionamiento",
-                icon: "tim-icons icon-bell-55",
-              });
-              resolve(false);
+            return true;
+          })
+          .catch((error) => {
+            console.log(error);
+            this.isSubmitting = false;
+            this.$notify({
+              title: "Error",
+              type: "danger",
+              message: "Error al actualizar el fraccionamiento",
+              icon: "tim-icons icon-bell-55",
             });
-        }
-      });
+          });
+      } else {
+        this.createResidential(data)
+          .then(() => {
+            this.$notify({
+              title: "Success",
+              type: "success",
+              message: "Fraccionamiento creado con éxito",
+              icon: "tim-icons icon-bell-55",
+            });
+            return true;
+          })
+          .catch((error) => {
+            console.log(error);
+            this.isSubmitting = false;
+            this.resetData();
+            this.$notify({
+              title: "Error",
+              type: "danger",
+              message: "Error al crear el fraccionamiento",
+              icon: "tim-icons icon-bell-55",
+            });
+            return false;
+          });
+      }
     },
     goToResidentials() {
       this.$router.push({ name: "Residentials" });

@@ -33,7 +33,8 @@ export default {
       tableData: [
         {
           title: "Visita Terreno",
-          description: "Mostrar terrene al cliente, Nombre del cliente,  8:47 AM",
+          description:
+            "Mostrar terrene al cliente, Nombre del cliente,  8:47 AM",
           done: false,
         },
         {
