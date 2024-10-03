@@ -46,6 +46,7 @@ const actions = {
             block: land.block,
             size: land.size,
             price: land.price,
+            contract_id: land.contract_id,
             house_number: land.house_number,
             residential_id: land.residential_id,
             residential_name: land.residential_name,

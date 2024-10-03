@@ -115,7 +115,7 @@
               :disabled="isSubmitting"
               native-type="submit"
               type="primary"
-              >{{ create_edit }} Fraccionamiento</base-button
+              >{{ isEdit ? "Editar" : "Crear" }} Fraccionamiento</base-button
             >
           </div>
         </card>
@@ -153,7 +153,7 @@ export default {
       cost: "",
       user_id: "",
       lands: [],
-      create_edit: "Crear",
+      isEdit: false,
       isSubmitting: false,
     };
   },
@@ -172,7 +172,7 @@ export default {
           this.cost = res.cost;
           this.lands = res.lands;
           this.user_id = String(res.user_id);
-          this.create_edit = "Editar";
+          this.isEdit = true;
         })
         .catch((error) => {
           console.log(error);
@@ -188,7 +188,7 @@ export default {
           user_id: this.user_id,
         },
       };
-      if (this.create_edit === "Editar") {
+      if (this.isEdit) {
         data.residential.id = this.id;
         this.updateResidential(data)
           .then(() => {
@@ -253,7 +253,7 @@ export default {
     if (residentialId) {
       this.loadResidentialData(residentialId);
     }
-    this.create_edit = residentialId ? "Editar" : "Crear";
+    this.isEdit = residentialId ? true : false;
   },
 };
 </script>

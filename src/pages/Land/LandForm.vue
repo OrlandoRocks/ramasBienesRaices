@@ -12,7 +12,7 @@
               <label class="col-sm-2 col-form-label">Fraccionamiento:</label>
               <div class="col-sm-7">
                 <ValidationProvider
-                  name="responsable"
+                  name="fraccionamiento"
                   rules="required"
                   v-slot="{ errors }"
                 >
@@ -21,7 +21,7 @@
                     style="width: 100%; margin-bottom: 10px"
                     :error="errors[0]"
                     size="large"
-                    placeholder="Seleccionar el responsable"
+                    placeholder="Seleccionar el Fraccionamiento"
                     v-model="residential_id"
                   >
                     <el-option
@@ -436,4 +436,8 @@ export default {
 };
 </script>
 
-<style></style>
+<style>
+.error-message {
+  color: red;
+}
+</style>

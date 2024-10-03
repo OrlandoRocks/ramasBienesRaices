@@ -1,7 +1,7 @@
 <template>
   <div class="content">
     <div class="col-md-8 ml-auto mr-auto">
-      <h2 class="text-center">Clientes</h2>
+      <h2 class="text-center">Contratos</h2>
     </div>
     <div class="row mt-5">
       <div class="col-12">
@@ -25,7 +25,7 @@
                 >
                 </el-option>
               </el-select>
-              <base-button @click="goToCreateClient" type="info">
+              <base-button @click="goToCreateContract" type="info">
                 <i class="tim-icons icon-simple-add"> </i> Crear Nuevo
               </base-button>
               <base-input>
@@ -48,27 +48,37 @@
                 :min-width="column.minWidth"
                 :prop="column.prop"
                 :label="column.label"
+                :formatter="
+                  typeof column.formatter === 'function'
+                    ? column.formatter
+                    : null
+                "
               >
+                <template
+                  #default="{ row }"
+                  v-if="typeof column.formatter !== 'function'"
+                >
+                  <div
+                    v-if="column.formatter"
+                    :is="column.formatter"
+                    :row="row"
+                    :column="column"
+                  ></div>
+                  <template v-else>
+                    {{ row[column.prop] }}
+                  </template>
+                </template>
               </el-table-column>
               <el-table-column :min-width="135" align="right" label="Actions">
                 <div slot-scope="props">
                   <base-button
-                    @click.native="handleEdit(props.$index, props.row)"
+                    @click.native="handleShow(props.row)"
                     class="edit btn-link"
                     type="warning"
                     size="sm"
                     icon
                   >
-                    <i class="tim-icons icon-pencil"></i>
-                  </base-button>
-                  <base-button
-                    @click.native="handleDelete(props.$index, props.row)"
-                    class="remove btn-link"
-                    type="danger"
-                    size="sm"
-                    icon
-                  >
-                    <i class="tim-icons icon-simple-remove"></i>
+                    <i class="tim-icons icon-zoom-split"></i>
                   </base-button>
                 </div>
               </el-table-column>
@@ -102,11 +112,10 @@
 import { Table, TableColumn, Select, Option } from "element-ui";
 import { BasePagination } from "@/components";
 import Fuse from "fuse.js";
-import swal from "sweetalert2";
 import { mapGetters, mapActions } from "vuex";
 
 export default {
-  name: "ClientTable",
+  name: "ContractTable",
   components: {
     ElTable: Table,
     ElTableColumn: TableColumn,
@@ -123,37 +132,49 @@ export default {
         total: 0,
       },
       searchQuery: "",
-      propsToSearch: ["full_name", "address", " email", "phone_number"],
+      propsToSearch: ["client_name", "land_code", " months", "monthly_payment"],
       tableColumns: [
         {
-          prop: "full_name",
-          label: "Nombre",
+          prop: "client_name",
+          label: "Cliente",
           minWidth: 200,
+          type: "text",
         },
         {
-          prop: "address",
-          label: "Direccion",
+          prop: "land_code",
+          label: "Terreno",
           minWidth: 250,
+          type: "text",
         },
         {
-          prop: "email",
-          label: "Correo",
+          prop: "months",
+          label: "Meses a pagar",
           minWidth: 120,
+          type: "text",
         },
         {
-          prop: "phone_number",
-          label: "Telefono",
+          prop: "monthly_payment",
+          label: "Pago Mensual",
           minWidth: 120,
+          formatter: (row) => {
+            return `${this.formatCurrency(row.monthly_payment)}`;
+          },
         },
         {
-          prop: "rfc",
-          label: "RFC",
+          prop: "total_price",
+          label: "Pago Total",
           minWidth: 120,
+          formatter: (row) => {
+            return `${this.formatCurrency(row.total_price)}`;
+          },
         },
         {
-          prop: "lands",
-          label: "Lotes",
-          minWidth: 80,
+          prop: "total_paid",
+          label: "Pagado",
+          minWidth: 120,
+          formatter: (row) => {
+            return `${this.formatCurrency(row.total_paid)}`;
+          },
         },
       ],
       searchedData: [],
@@ -161,9 +182,12 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(["getClients"]),
+    ...mapGetters(["getContracts"]),
+    filteredColumns() {
+      return this.tableColumns.filter(column => column.type!== 'currency' || column.type === 'currency');
+    },
     tableData() {
-      return this.getClients;
+      return this.getContracts;
     },
     queriedData() {
       let result = this.tableData;
@@ -189,56 +213,22 @@ export default {
     },
   },
   methods: {
-    ...mapActions(["fetchClients", "deleteClient"]),
-    handleEdit(index, row) {
-      this.$router.push(`/clients/${row.id}/edit`);
+    ...mapActions(["fetchContracts", "deleteContract"]),
+    handleShow(row) {
+      this.$router.push(`/contracts/${row.id}/show`);
     },
-    handleDelete(index, row) {
-      swal
-        .fire({
-          title: "¿Estas seguro?",
-          text: "No podras revertir esta accion",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#3085d6",
-          cancelButtonColor: "#d33",
-          confirmButtonText: "Si, borrar",
-          cancelButtonText: "Cancelar",
-        })
-        .then((result) => {
-          if (result.value) {
-            this.deleteClient(row.id);
-            this.deleteRow(row);
-            swal.fire({
-              title: "Eliminado!",
-              text: `You deleted ${row.name}`,
-              icon: "success",
-              confirmButtonClass: "btn btn-success btn-fill",
-              buttonsStyling: false,
-            });
-          }
-        });
-    },
-    deleteRow(row) {
-      let indexToDelete = this.tableData.findIndex(
-        (tableRow) => tableRow.id === row.id
-      );
-      if (indexToDelete >= 0) {
-        this.tableData.splice(indexToDelete, 1);
-      }
-    },
-    goToCreateClient() {
-      this.$router.push({ name: "CreateClient" });
+    goToCreateContract() {
+      this.$router.push({ name: "CreateContract" });
     },
   },
   mounted() {
-    this.fuseSearch = new Fuse(this.getClients, {
+    this.fuseSearch = new Fuse(this.getContracts, {
       keys: ["full_name", "address", "phone_number", "email"],
       threshold: 0.3,
     });
   },
   created() {
-    this.fetchClients();
+    this.fetchContracts();
   },
   watch: {
     searchQuery(value) {

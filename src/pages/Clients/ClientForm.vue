@@ -94,6 +94,7 @@
                       type="date"
                       placeholder="Fecha de Nacimiento"
                       v-model="birthday"
+                      value-format="yyyy-MM-dd"
                     >
                     </el-date-picker>
                   </base-input>
@@ -222,7 +223,7 @@
                   v-slot="{ passed, failed, errors }"
                 >
                   <base-input
-                    v-model="credential"
+                    v-model="image"
                     :error="errors[0]"
                     :class="[
                       { 'has-success': passed },
@@ -238,12 +239,11 @@
                 :disabled="isSubmitting"
                 native-type="submit"
                 type="primary"
-                >Crear Cliente</base-button
+                >{{ isEdit ? "Editar" : "Crear" }} Cliente</base-button
               >
             </div>
           </div>
         </card>
-        <div>{{ image }}</div>
       </form>
     </ValidationObserver>
   </div>
@@ -287,6 +287,7 @@ export default {
         regular: null,
         avatar: null,
       },
+      id: "",
       code: "",
       email: "",
       rfc: "",
@@ -295,10 +296,12 @@ export default {
       address: "",
       zip_code: "",
       civil_status: "",
+      credential: "",
       state: "Chihuahua",
       city: "Cuauhtemoc",
       image: "",
       lands: [],
+      isEdit: false,
       isSubmitting: false,
     };
   },
@@ -306,6 +309,8 @@ export default {
     ...mapActions([
       "createClient",
       "fetchLands",
+      "fetchClientById",
+      "updateClient",
       "getPresignedUrl",
       "uploadFileToS3",
     ]),
@@ -315,23 +320,93 @@ export default {
       this.city = "";
     },
 
+    loadClientData(id) {
+      this.fetchClientById(id)
+        .then((res) => {
+          this.id = res.id;
+          this.full_name = res.full_name;
+          this.code = res.code;
+          this.email = res.email;
+          this.rfc = res.rfc;
+          this.phone_number = res.phone_number;
+          this.birthday = res.birthday;
+          this.address = res.address;
+          this.zip_code = res.zip_code;
+          this.civil_status = res.civil_status;
+          this.state = res.state;
+          this.city = res.city;
+          this.image = res.image;
+          this.isEdit = true;
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
+
     async submit() {
       this.isSubmitting = true;
-      await this.createClient({
-        full_name: this.full_name,
-        code: this.code,
-        email: this.email,
-        phone_number: this.phone_number,
-        birthday: this.birthday,
-        image: this.image,
-        rfc: this.rfc,
-        address: this.address,
-        zip_code: this.zip_code,
-        civil_status: this.civil_status,
-        state: this.state,
-        city: this.city,
-      });
-      this.isSubmitting = false;
+      let data = {
+        client: {
+          full_name: this.full_name,
+          code: this.code,
+          email: this.email,
+          rfc: this.rfc,
+          phone_number: this.phone_number,
+          birthday: this.birthday,
+          address: this.address,
+          zip_code: this.zip_code,
+          civil_status: this.civil_status,
+          state: this.state,
+          city: this.city,
+          image: this.image,
+        },
+      };
+      if (this.isEdit) {
+        data.client.id = this.id;
+        this.updateClient(data)
+          .then(() => {
+            this.$notify({
+              title: "Success",
+              type: "success",
+              message: "Cliente actualizado con éxito",
+              icon: "tim-icons icon-bell-55",
+            });
+            return true;
+          })
+          .catch((error) => {
+            console.log(error);
+            this.isSubmitting = false;
+            this.$notify({
+              title: "Error",
+              type: "danger",
+              message: "Error al actualizar el Cliente",
+              icon: "tim-icons icon-bell-55",
+            });
+          });
+      } else {
+        this.createClient(data)
+          .then(() => {
+            this.$notify({
+              title: "Success",
+              type: "success",
+              message: "El Cliente fue creado con éxito",
+              icon: "tim-icons icon-bell-55",
+            });
+            return true;
+          })
+          .catch((error) => {
+            console.log(error);
+            this.isSubmitting = false;
+            this.resetData();
+            this.$notify({
+              title: "Error",
+              type: "danger",
+              message: "Error al crear el cliente",
+              icon: "tim-icons icon-bell-55",
+            });
+            return false;
+          });
+      }
     },
     onImageChange(file) {
       this.images.regular = file;
@@ -340,6 +415,26 @@ export default {
     goToClients() {
       this.$router.push({ name: "Clients" });
     },
+    resetData() {
+      this.full_name = "";
+      this.code = "";
+      this.email = "";
+      this.rfc = "";
+      this.phone_number = "";
+      this.birthday = "";
+      this.address = "";
+      this.zip_code = "";
+      this.civil_status = "";
+      this.state = "Chihuahua";
+      this.city = "Cuauhtemoc";
+      this.image = "";
+    },
+  },
+  created() {
+    if (this.$route.params.id) {
+      this.id = this.$route.params.id;
+      this.loadClientData(this.id);
+    }
   },
 };
 </script>

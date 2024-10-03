@@ -61,7 +61,6 @@ const actions = {
       axios
         .post(`${BASE_URL}/login`, payload)
         .then((response) => {
-          console.log(response);
           commit("setUserInfo", response);
           resolve(response);
         })

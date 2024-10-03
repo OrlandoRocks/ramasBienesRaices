@@ -9,6 +9,7 @@
               type="datetime"
               placeholder="Date Time Picker"
               v-model="dateTimePicker"
+              value-format="yyyy-MM-dd"
             >
             </el-date-picker>
           </base-input>
