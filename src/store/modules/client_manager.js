@@ -164,7 +164,7 @@ const actions = {
         });
     });
   },
-  updateClient({ commit }, client) {
+  updateClient({ commit }, payload) {
     return new Promise((resolve, reject) => {
       const config = {
         headers: {
@@ -172,7 +172,7 @@ const actions = {
         },
       };
       axios
-        .put(`${BASE_URL}/clients/${client.id}`, client, config)
+        .put(`${BASE_URL}/clients/${payload.client.id}`, payload, config)
         .then((response) => {
           commit("setClientUpdate", response.data);
           router.push("/clients");

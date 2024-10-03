@@ -101,6 +101,7 @@ import { required, numeric, email, min } from "vee-validate/dist/rules";
 extend("email", email);
 extend("required", required);
 extend("numeric", numeric);
+extend("min", min);
 
 export default {
   data() {

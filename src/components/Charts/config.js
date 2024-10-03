@@ -214,8 +214,8 @@ export let purpleChartOptions = {
           zeroLineColor: "transparent",
         },
         ticks: {
-          suggestedMin: 60,
-          suggestedMax: 125,
+          suggestedMin: 0,
+          suggestedMax: 100,
           padding: 20,
           fontColor: "#9a9a9a",
         },
@@ -307,10 +307,13 @@ export let greenChartOptions = {
           zeroLineColor: "transparent",
         },
         ticks: {
-          suggestedMin: 50,
-          suggestedMax: 125,
+          suggestedMin: 0,
+          suggestedMax: 100,
           padding: 20,
           fontColor: "#9e9e9e",
+          callback: function (value) {
+            return "$ " + value.toLocaleString() + "K"; // format y-axis tick values as currency
+          },
         },
       },
     ],
@@ -353,8 +356,8 @@ export let barChartOptions = {
           zeroLineColor: "transparent",
         },
         ticks: {
-          suggestedMin: 60,
-          suggestedMax: 120,
+          suggestedMin: 0,
+          suggestedMax: 100,
           padding: 20,
           fontColor: "#9e9e9e",
         },

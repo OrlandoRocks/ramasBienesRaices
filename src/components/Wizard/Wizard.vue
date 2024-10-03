@@ -106,11 +106,11 @@ export default {
     },
     title: {
       type: String,
-      default: "Title",
+      default: "Titulo",
     },
     subTitle: {
       type: String,
-      default: "Subtitle",
+      default: "Subtitulo",
     },
     prevButtonText: {
       type: String,
@@ -118,7 +118,7 @@ export default {
     },
     nextButtonText: {
       type: String,
-      default: "Adelante",
+      default: "Siguiente",
     },
     finishButtonText: {
       type: String,
@@ -231,6 +231,8 @@ export default {
       let isValid = await this.validate();
       if (isValid && this.activeTabIndex < this.tabCount - 1) {
         this.activeTabIndex++;
+      } else if (isValid && this.activeTabIndex === this.tabCount - 1) {
+        this.$emit("wizard-complete");
       }
       return isValid;
     },

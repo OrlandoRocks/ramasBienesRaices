@@ -51,10 +51,13 @@ const RegularForms = () => import("src/pages/Forms/RegularForms.vue");
 const ExtendedForms = () => import("src/pages/Forms/ExtendedForms.vue");
 const ValidationForms = () => import("src/pages/Forms/ValidationForms.vue");
 const Wizard = () => import("src/pages/Forms/Wizard.vue");
+const ContractWizard = () => import("src/pages/Contracts/ContractsWizard.vue");
+
 const ResidentialForm = () => import("@/pages/Residential/ResidentialForm.vue");
 const LandForm = () => import("src/pages/Land/LandForm.vue");
 const ClientForm = () => import("src/pages/Clients/ClientForm.vue");
 const ExpenseForm = () => import("src/pages/Expense/ExpenseForm.vue");
+const PaymentForm = () => import("src/pages/Payments/PaymentForm.vue");
 
 // Maps pages
 const GoogleMaps = () =>
@@ -80,6 +83,11 @@ const ResidentialsTable = () =>
 const LandsTable = () => import("src/pages/Land/LandTable.vue");
 const ClientTable = () => import("src/pages/Clients/ClientTable.vue");
 const ExpensesTable = () => import("src/pages/Expense/ExpenseTable.vue");
+const ContractsTable = () => import("src/pages/Contracts/ContractTable.vue");
+const PaymentsTable = () => import("src/pages/Payments/PaymentTable.vue");
+
+
+const ContractShow = () => import("src/pages/Contracts/ContractShow.vue");
 
 const RegularTables = () =>
   import(/* webpackChunkName: "tables" */ "src/pages/Tables/RegularTables.vue");
@@ -245,6 +253,30 @@ let residentialsMenu = {
   meta: { requiresAuth: true },
 };
 
+let contractsMenu = {
+  path: "/contracts",
+  component: DashboardLayout,
+  name: "ContractsHome",
+  redirect: "/contracts",
+  children: [
+    {
+      path: "",
+      name: "Contracts",
+      components: { default: ContractsTable },
+    },
+    {
+      path: "new",
+      name: "CreateContract",
+      components: { default: ContractWizard },
+    },
+    {
+      path: ":id/show",
+      name: "ShowContract",
+      components: { default: ContractShow },
+    },
+  ],
+};
+
 let landsMenu = {
   path: "/lands",
   component: DashboardLayout,
@@ -265,6 +297,25 @@ let landsMenu = {
       path: ":id/edit",
       name: "EditLand",
       components: { default: LandForm },
+    },
+  ],
+};
+
+let paymentsMenu = {
+  path: "/payments",
+  component: DashboardLayout,
+  name: "PaymentsHome",
+  redirect: "/payments",
+  children: [
+    {
+      path: "",
+      name: "Payments",
+      components: { default: PaymentsTable },
+    },
+    {
+      path: ":id/edit",
+      name: "EditPayment",
+      components: { default: PaymentForm },
     },
   ],
 };
@@ -352,6 +403,8 @@ const routes = [
   landsMenu,
   clientsMenu,
   expensesMenu,
+  contractsMenu,
+  paymentsMenu,
   authPages,
   {
     path: "/",

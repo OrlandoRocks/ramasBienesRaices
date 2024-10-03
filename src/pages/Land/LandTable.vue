@@ -48,7 +48,26 @@
                 :min-width="column.minWidth"
                 :prop="column.prop"
                 :label="column.label"
+                :formatter="
+                  typeof column.formatter === 'function'
+                    ? column.formatter
+                    : null
+                "
               >
+                <template
+                  #default="{ row }"
+                  v-if="typeof column.formatter !== 'function'"
+                >
+                  <div
+                    v-if="column.formatter"
+                    :is="column.formatter"
+                    :row="row"
+                    :column="column"
+                  ></div>
+                  <template v-else>
+                    {{ row[column.prop] }}
+                  </template>
+                </template>
               </el-table-column>
               <el-table-column :min-width="135" align="right" label="Actions">
                 <div slot-scope="props">
@@ -135,7 +154,14 @@ export default {
         { prop: "address", label: "Dirección", minWidth: 250 },
         { prop: "house_number", label: "Número de Casa", minWidth: 100 },
         { prop: "size", label: "Tamaño", minWidth: 100 },
-        { prop: "price", label: "Precio", minWidth: 100 },
+        {
+          prop: "price",
+          label: "Precio",
+          minWidth: 100,
+          formatter: (row) => {
+            return `${this.formatCurrency(row.price)}`;
+          },
+        },
       ],
       searchedData: [],
       fuseSearch: null,

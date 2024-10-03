@@ -5,6 +5,8 @@ import residentialManager from "@/store/modules/residential_manager";
 import clientManager from "@/store/modules/client_manager";
 import expenseManager from "@/store/modules/expense_manager";
 import landManager from "@/store/modules/land_manager";
+import contractManager from "@/store/modules/contract_manager";
+import paymentManager from "@/store/modules/payment_manager";
 import s3 from "@/store/modules/s3";
 
 Vue.use(Vuex);
@@ -21,5 +23,7 @@ export default new Vuex.Store({
     landManager,
     clientManager,
     expenseManager,
+    contractManager,
+    paymentManager,
   },
 });

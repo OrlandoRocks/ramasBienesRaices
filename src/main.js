@@ -7,6 +7,9 @@ import router from "./router/router";
 import store from "./store";
 import i18n from "./i18n";
 import "./registerServiceWorker";
+import currencyMixin from "./util/currency_mixin";
+
+Vue.mixin(currencyMixin);
 
 Vue.config.productionTip = false;
 
@@ -51,3 +54,5 @@ if (localAuthToken && localAuthToken !== "undefined") {
 } else {
   console.log("No hay token en localStorage.");
 }
+
+
