@@ -99,6 +99,9 @@ const PaginatedTables = () =>
   import(
     /* webpackChunkName: "tables" */ "src/pages/Tables/PaginatedTables.vue"
   );
+
+const BalanceIndex = () => import("src/pages/Balance/BalanceIndex.vue");
+
 let componentsMenu = {
   path: "/components",
   component: DashboardLayout,
@@ -370,6 +373,26 @@ let expensesMenu = {
   meta: { requiresAuth: true },
 };
 
+let balanceMenu = {
+  path: "/balance",
+  component: DashboardLayout,
+  name: "BalanceHome",
+  redirect: "/balance",
+  children: [
+    {
+      path: "",
+      name: "Balance",
+      components: { default: BalanceIndex },
+    },
+    {
+      path: "/get_balance_data",
+      name: "BalanceData",
+      components: { default: BalanceIndex },
+    }
+  ],
+  meta: { requiresAuth: true },
+};
+
 let authPages = {
   path: "/",
   component: AuthLayout,
@@ -405,6 +428,7 @@ const routes = [
   expensesMenu,
   contractsMenu,
   paymentsMenu,
+  balanceMenu,
   authPages,
   {
     path: "/",

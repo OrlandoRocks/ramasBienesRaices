@@ -65,6 +65,13 @@
             path: '/calendar',
           }"
         ></sidebar-item>
+        <sidebar-item
+          :link="{
+            name: $t('sidebar.balance'),
+            icon: 'tim-icons icon-chart-bar-32',
+            path: '/balance',
+          }"
+        ></sidebar-item>
       </template>
     </side-bar>
     <!--Share plugin (for demo purposes). You can remove it if don't plan on using it-->
