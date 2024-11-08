@@ -16,7 +16,7 @@ const state = {
     cost: "",
     net_balance: "",
     payments_by_month: "",
-    expenses_by_month: ""
+    expenses_by_month: "",
   },
 };
 
@@ -24,12 +24,12 @@ const getters = {
   getBalanceResidentials(state) {
     return state.residentials;
   },
-  getBalanceData(state){
+  getBalanceData(state) {
     return state.residentials;
   },
-  getResidentialsList(state){
+  getResidentialsList(state) {
     return state.residentials_list;
-  }
+  },
 };
 
 const actions = {
@@ -50,10 +50,10 @@ const actions = {
             user_id: residential.attributes["user-id"],
             user_name: residential.attributes["user-full-name"],
             lands_count: residential.attributes["lands-count"],
-            total_expenses: residential.attributes["total-expenses"],
-            total_payments: residential.attributes["total-payments"],
+            payments_by_month: residential.attributes["payments-by-month"],
+            expenses_by_month: residential.attributes["expenses-by-month"],
             cost: residential.attributes.cost,
-            net_balance: residential.attributes["total-payments"] - residential.attributes["total-expenses"]
+            net_balance: (residential.attributes["payments-by-month"] - residential.attributes["expenses-by-month"])
           };
         });
         commit("setResidentials", formatedResidentials);
@@ -71,7 +71,6 @@ const actions = {
     axios
       .get(`${BASE_URL}/get_balance_data?residential_id=${data.residential_id}&month=${data.month}&year=${data.year}`, config)
       .then((response) => {
-        //let residential = response.data.data[0];
         const formatedResidentials = response.data.data.map((residential) => {
           return {
             id: residential.attributes.id,
@@ -80,24 +79,12 @@ const actions = {
             user_id: residential.attributes["user-id"],
             user_name: residential.attributes["user-full-name"],
             lands_count: residential.attributes["lands-count"],
-            payments_by_month: "$" + residential.attributes["payments-by-month"],
-            expenses_by_month: "$" + residential.attributes["expenses-by-month"],
+            payments_by_month: residential.attributes["payments-by-month"],
+            expenses_by_month: residential.attributes["expenses-by-month"],
             cost: residential.attributes.cost,
             net_balance: (residential.attributes["payments-by-month"] - residential.attributes["expenses-by-month"])
           };
         });
-        /* const formatedResidentials = {
-            id: residential.id,
-            name: residential.attributes.name,
-            address: residential.attributes.address,
-            user_id: residential.attributes["user-id"],
-            user_name: residential.attributes["user-full-name"],
-            lands_count: residential.attributes["lands-count"],
-            payments_by_month: residential.attributes["payments-by-month"],
-            expenses_by_month: residential.attributes["expenses-by-month"],
-            cost: residential.attributes.cost,
-            net_balance: residential.attributes["total-payments"] - residential.attributes["total-expenses"]
-          }; */
         commit("setBalanceInfo", formatedResidentials);
       })
       .catch((error) => {
