@@ -43,6 +43,7 @@
     "widgets": "Herramientas",
     "charts": "Gráficos",
     "calendar": "Calendario",
-    "expenses": "Gastos"
+    "expenses": "Gastos",
+    "balance": "Balance General"
   }
 }

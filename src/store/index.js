@@ -7,6 +7,7 @@ import expenseManager from "@/store/modules/expense_manager";
 import landManager from "@/store/modules/land_manager";
 import contractManager from "@/store/modules/contract_manager";
 import paymentManager from "@/store/modules/payment_manager";
+import balanceManager from "@/store/modules/balance_manager";
 import s3 from "@/store/modules/s3";
 
 Vue.use(Vuex);
@@ -25,5 +26,6 @@ export default new Vuex.Store({
     expenseManager,
     contractManager,
     paymentManager,
+    balanceManager
   },
 });
