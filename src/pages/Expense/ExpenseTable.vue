@@ -25,7 +25,11 @@
                 >
                 </el-option>
               </el-select>
-              <base-button @click="goToCreateExpense" type="info">
+              <base-button
+                v-permission="'expense.create'"
+                @click="goToCreateExpense"
+                type="info"
+              >
                 <i class="tim-icons icon-simple-add"> </i> Crear Nuevo
               </base-button>
               <base-input>

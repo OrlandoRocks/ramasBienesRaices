@@ -184,6 +184,9 @@
           </div>
           <div class="text-center">
             <base-button
+              v-permission="
+                create_edit === 'Editar' ? 'expense.update' : 'expense.create'
+              "
               :disabled="isSubmitting"
               native-type="submit"
               type="primary"

@@ -1,8 +1,12 @@
 <template>
-  <div class="row">
+  <div class="row" id="pdf">
     <div class="col-md-12">
       <card>
         <h4 slot="header" class="card-title"><b>Contrato</b></h4>
+
+        <base-button @click="generatePDF" type="text">
+          <i class="tim-icons el-icon-document"> </i> Descargar PDF
+        </base-button>
 
         <div class="card-body">
           <div class="typography-line">
@@ -203,6 +207,8 @@
 <script>
 import { Table, TableColumn } from "element-ui";
 import { mapGetters, mapActions } from "vuex";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default {
   components: {
@@ -315,6 +321,179 @@ export default {
           id: pendingRow.id,
         },
       });
+    },
+
+    generatePDF() {
+      const doc = new jsPDF();
+      var totalPagesExp = "{total_pages_count_string}";
+
+      var finalY = doc.lastAutoTable.finalY || 10;
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Contrato", 14, finalY + 15);
+      doc.setFont("Helvetica", "", "normal");
+      autoTable(doc, {
+        // columnStyles: { europe: { halign: 'center' } }, // European countries centered
+        startY: finalY + 20,
+        body: [
+          {
+            contract_date: this.contractInfo.contract_date,
+            months: this.contractInfo.months,
+            monthly_payment:
+              this.formatCurrency(this.contractInfo.monthly_payment) + " MXN",
+            down_payment:
+              this.formatCurrency(this.contractInfo.down_payment) + " MXN",
+            total_price:
+              this.formatCurrency(this.contractInfo.total_price) + " MXN",
+            total_paid:
+              this.formatCurrency(this.contractInfo.total_paid) + " MXN",
+          },
+        ],
+        columns: [
+          { header: "Fecha del Contrato", dataKey: "contract_date" },
+          { header: "Meses a Pagar", dataKey: "months" },
+          { header: "Pago por Mes", dataKey: "monthly_payment" },
+          { header: "Abono Inicial", dataKey: "down_payment" },
+          { header: "Precio del Terreno", dataKey: "total_price" },
+          { header: "Cantidad Pagada", dataKey: "total_paid" },
+        ],
+      });
+
+      finalY = doc.lastAutoTable.finalY;
+      doc.setFontSize(16);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Cliente", 14, finalY + 15);
+      doc.setFont("Helvetica", "", "normal");
+      doc.setFontSize(11);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Nombre:", 14, finalY + 25);
+      doc.setFont("Helvetica", "", "normal");
+      doc.text(this.clientInfo.full_name, 31, finalY + 25);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Teléfono:", 140, finalY + 25);
+      doc.setFont("Helvetica", "", "normal");
+      doc.text(this.clientInfo.phone_number, 158, finalY + 25);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Email:", 14, finalY + 33);
+      doc.setFont("Helvetica", "", "normal");
+      doc.text(this.clientInfo.email, 27, finalY + 33);
+      // autoTable(doc, {
+      //   // columnStyles: { europe: { halign: 'center' } }, // European countries centered
+      //   startY: finalY + 20,
+      //   body: [
+      //     {
+      //       full_name: this.clientInfo.full_name,
+      //       phone_number: this.clientInfo.phone_number,
+      //       email: this.clientInfo.email,
+      //       // address: this.clientInfo.address,
+      //       // rfc: this.clientInfo.rfc,
+      //     },
+      //   ],
+      //   columns: [
+      //     { header: "Nombre", dataKey: "full_name" },
+      //     { header: "Teléfono", dataKey: "phone_number" },
+      //     { header: "Email", dataKey: "email" },
+      //     // { header: "Dirección", dataKey: "address" },
+      //     // { header: "RFC", dataKey: "rfc" },
+      //   ],
+      // });
+
+      finalY = doc.lastAutoTable.finalY + 40;
+      doc.setFontSize(16);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Terreno", 14, finalY + 15);
+      doc.setFontSize(11);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Fraccionamiento:", 14, finalY + 25);
+      doc.setFont("Helvetica", "", "normal");
+      doc.text(this.landInfo.residential_name, 47, finalY + 25);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Dirección:", 125, finalY + 25);
+      doc.setFont("Helvetica", "", "normal");
+      doc.text(this.landInfo.address, 145, finalY + 25);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Código:", 14, finalY + 33);
+      doc.setFont("Helvetica", "", "normal");
+      doc.text(this.landInfo.land_code, 29, finalY + 33);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Tamaño:", 125, finalY + 33);
+      doc.setFont("Helvetica", "", "normal");
+      doc.text(this.landInfo.size + "m²", 142, finalY + 33);
+      // autoTable(doc, {
+      //   // columnStyles: { europe: { halign: 'center' } }, // European countries centered
+      //   startY: finalY + 20,
+      //   body: [
+      //     {
+      //       residential_name: this.landInfo.residential_name,
+      //       address: this.landInfo.address,
+      //       land_code: this.landInfo.land_code,
+      //       size: this.landInfo.size + "m²",
+      //       // house_number: this.landInfo.house_number,
+      //     },
+      //   ],
+      //   columns: [
+      //     { header: "Fraccionamiento", dataKey: "residential_name" },
+      //     { header: "Dirección", dataKey: "address" },
+      //     { header: "Código", dataKey: "land_code" },
+      //     { header: "Tamaño", dataKey: "size" },
+      //     // { header: "Número de Casa", dataKey: "house_number" },
+      //   ],
+      // });
+
+      const paymentColumns = [
+        "Total a Pagar",
+        "Pago",
+        "Número de Pago",
+        "Fecha de Pago",
+        "Estatus",
+      ];
+      finalY = doc.lastAutoTable.finalY + 75;
+      doc.setFontSize(16);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Pagos", 14, finalY + 15);
+      doc.setFont("Helvetica", "", "normal");
+      const rows = this.paymentData.map((row) => [
+        this.formatCurrency(row.total) + " MXN",
+        this.formatCurrency(row.amount) + " MXN",
+        row.row_number,
+        row.payment_date,
+        row.payment_status_name,
+      ]);
+      autoTable(doc, {
+        // columnStyles: { europe: { halign: 'center' } }, // European countries centered
+        startY: finalY + 20,
+        head: [paymentColumns],
+        body: rows,
+        // columns: [
+        //   { header: "Total a Pagar", dataKey: "total" },
+        //   { header: "Pago", dataKey: "amount" },
+        //   { header: "Número de Pago", dataKey: "row_number" },
+        //   { header: "Fecha de Pago", dataKey: "payment_date" },
+        //   { header: "Estatus", dataKey: "payment_status_name" },
+        // ],
+        didDrawPage: function (data) {
+          // Footer
+          var str = "Página " + doc.internal.getNumberOfPages();
+          // Total page number plugin only available in jspdf v1.0+
+          if (typeof doc.putTotalPages === "function") {
+            str = str + " de " + totalPagesExp;
+          }
+          doc.setFontSize(10);
+
+          // jsPDF 1.4+ uses getHeight, <1.4 uses .height
+          var pageSize = doc.internal.pageSize;
+          var pageHeight = pageSize.height
+            ? pageSize.height
+            : pageSize.getHeight();
+          doc.text(str, data.settings.margin.left, pageHeight - 10);
+        },
+        margin: { top: 30 },
+      });
+
+      if (typeof doc.putTotalPages === "function") {
+        doc.putTotalPages(totalPagesExp);
+      }
+
+      doc.save("reporte.pdf");
     },
   },
   created() {

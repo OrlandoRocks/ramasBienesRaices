@@ -17,13 +17,16 @@
         >
         </sidebar-item>
         <sidebar-item
+          v-permission="'residential.index'"
           :link="{
             name: $t('sidebar.neighborhood'),
             icon: 'tim-icons icon-square-pin',
             path: '/residentials',
           }"
         ></sidebar-item>
+        <!--          :is-visible="hasPermission('land', 'index')"-->
         <sidebar-item
+          v-permission="'land.index'"
           :link="{
             name: $t('sidebar.lands'),
             icon: 'tim-icons icon-vector',
@@ -31,6 +34,7 @@
           }"
         ></sidebar-item>
         <sidebar-item
+          v-permission="'client.index'"
           :link="{
             name: $t('sidebar.clients'),
             icon: 'tim-icons icon-badge',
@@ -38,6 +42,7 @@
           }"
         ></sidebar-item>
         <sidebar-item
+          v-permission="'expense.index'"
           :link="{
             name: $t('sidebar.expenses'),
             icon: 'tim-icons icon-money-coins',
@@ -45,6 +50,7 @@
           }"
         ></sidebar-item>
         <sidebar-item
+          v-permission="'contract.index'"
           :link="{
             name: $t('sidebar.contracts'),
             icon: 'tim-icons icon-paper',

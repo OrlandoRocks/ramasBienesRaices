@@ -25,7 +25,11 @@
                 >
                 </el-option>
               </el-select>
-              <base-button @click="goToCreateResidential" type="info">
+              <base-button
+                v-permission="'residential.create'"
+                @click="goToCreateResidential"
+                type="info"
+              >
                 <i class="tim-icons icon-simple-add"> </i> Crear Nuevo
               </base-button>
               <base-input>

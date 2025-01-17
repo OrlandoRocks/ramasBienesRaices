@@ -14,6 +14,7 @@ const state = {
     email: null,
   },
   users: [],
+  permissions: {},
 };
 const getters = {
   getAuthToken(state) {
@@ -38,6 +39,12 @@ const getters = {
     const loggedOut =
       state.auth_token == null || state.auth_token == JSON.stringify(null);
     return !loggedOut;
+  },
+  hasPermission: (state) => (model, action) => {
+    return state.permissions?.[model]?.[action] ?? false;
+  },
+  hasPermissionView: (state) => (model, action) => {
+    return state.permissions?.[model]?.[action] ?? false;
   },
 };
 const actions = {
@@ -149,6 +156,7 @@ const mutations = {
     state.auth_token = data.data.meta.token;
     axios.defaults.headers.common["Authorization"] = state.auth_token;
     localStorage.setItem("auth_token", state.auth_token);
+    state.permissions = data.data.meta.permissions;
   },
   setError(state, error) {
     state.errors = error;
@@ -157,6 +165,7 @@ const mutations = {
     state.user = data.data.data.attributes;
     state.user.last_name = data.data.data.attributes["last-name"];
     state.auth_token = localStorage.getItem("auth_token");
+    state.permissions = data.data.meta.permissions;
   },
   setUsers(state, data) {
     state.users = data;
