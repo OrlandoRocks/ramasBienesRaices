@@ -124,6 +124,7 @@
           </div>
           <div class="text-center">
             <base-button
+              v-permission="isEdit ? 'residential.update' : 'residential.create'"
               :disabled="isSubmitting"
               native-type="submit"
               type="primary"
