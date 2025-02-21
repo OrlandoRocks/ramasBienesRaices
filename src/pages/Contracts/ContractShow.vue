@@ -219,10 +219,51 @@ export default {
     generatePDF() {
       const doc = new jsPDF();
       var totalPagesExp = "{total_pages_count_string}";
-
       var finalY = doc.lastAutoTable.finalY || 10;
+
+      // doc.setFontSize(16);
+      // doc.setFont("Helvetica", "normal", "bold");
+      // doc.text("Cliente", 14, finalY + 15);
+      doc.setFont("Helvetica", "", "normal");
+      doc.setFontSize(11);
       doc.setFont("Helvetica", "normal", "bold");
-      doc.text("Contrato", 14, finalY + 15);
+      doc.text("Nombre:", 14, finalY);
+      doc.setFont("Helvetica", "", "normal");
+      doc.text(this.clientInfo.full_name, 31, finalY);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Teléfono:", 125, finalY);
+      doc.setFont("Helvetica", "", "normal");
+      doc.text(this.clientInfo.phone_number, 143, finalY);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Email:", 14, finalY + 8);
+      doc.setFont("Helvetica", "", "normal");
+      doc.text(this.clientInfo.email, 27, finalY + 8);
+
+      finalY += 16;
+
+      doc.setFontSize(11);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Fraccionamiento Terreno:", 14, finalY);
+      doc.setFont("Helvetica", "", "normal");
+      doc.text(this.landInfo.residential_name, 63, finalY);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Dirección Terreno:", 125, finalY);
+      doc.setFont("Helvetica", "", "normal");
+      doc.text(this.landInfo.address, 161, finalY);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Código Terreno:", 14, finalY + 8);
+      doc.setFont("Helvetica", "", "normal");
+      doc.text(this.landInfo.land_code, 45, finalY + 8);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Tamaño Terreno:", 125, finalY + 8);
+      doc.setFont("Helvetica", "", "normal");
+      doc.text(this.landInfo.size + "m²", 158, finalY + 8);
+
+      finalY += 20;
+
+      doc.setFontSize(16);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Contrato", 14, finalY + 8);
       doc.setFont("Helvetica", "", "normal");
       autoTable(doc, {
         // columnStyles: { europe: { halign: 'center' } }, // European countries centered
@@ -356,13 +397,6 @@ export default {
         startY: finalY + 20,
         head: [paymentColumns],
         body: rows,
-        // columns: [
-        //   { header: "Total a Pagar", dataKey: "total" },
-        //   { header: "Pago", dataKey: "amount" },
-        //   { header: "Número de Pago", dataKey: "row_number" },
-        //   { header: "Fecha de Pago", dataKey: "payment_date" },
-        //   { header: "Estatus", dataKey: "payment_status_name" },
-        // ],
         didDrawPage: function (data) {
           // Footer
           var str = "Página " + doc.internal.getNumberOfPages();
@@ -371,7 +405,6 @@ export default {
             str = str + " de " + totalPagesExp;
           }
           doc.setFontSize(10);
-
           // jsPDF 1.4+ uses getHeight, <1.4 uses .height
           var pageSize = doc.internal.pageSize;
           var pageHeight = pageSize.height
