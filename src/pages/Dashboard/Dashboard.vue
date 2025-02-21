@@ -1,82 +1,116 @@
 <template>
   <div class="row">
-    <!-- Small charts -->
-    <div class="col-lg-4" :class="{ 'text-right': isRTL }">
-      <card type="chart">
-        <template slot="header">
-          <h5 class="card-category">Total Contratos</h5>
-          <h3 class="card-title">
-            <i class="tim-icons icon-bell-55 text-primary"></i> 763,215
-          </h3>
-        </template>
-        <div class="chart-area">
-          <line-chart
-            style="height: 100%"
-            :chart-data="purpleLineChart.chartData"
-            :gradient-colors="purpleLineChart.gradientColors"
-            :gradient-stops="purpleLineChart.gradientStops"
-            :extra-options="purpleLineChart.extraOptions"
-          >
-          </line-chart>
-        </div>
-      </card>
-    </div>
-    <div class="col-lg-4" :class="{ 'text-right': isRTL }">
-      <card type="chart">
-        <template slot="header">
-          <h5 class="card-category">Total de Ventas</h5>
-          <h3 class="card-title">
-            <i class="tim-icons icon-delivery-fast text-info"></i> 3,500,000$
-          </h3>
-        </template>
-        <div class="chart-area">
-          <bar-chart
-            style="height: 100%"
-            :chart-data="blueBarChart.chartData"
-            :gradient-stops="blueBarChart.gradientStops"
-            :extra-options="blueBarChart.extraOptions"
-          >
-          </bar-chart>
-        </div>
-      </card>
-    </div>
-    <div class="col-lg-4" :class="{ 'text-right': isRTL }">
-      <card type="chart">
-        <template slot="header">
-          <h5 class="card-category">Total de Clientes</h5>
-          <h3 class="card-title">
-            <i class="tim-icons icon-send text-success"></i> 1,100K
-          </h3>
-        </template>
-        <div class="chart-area">
-          <line-chart
-            style="height: 100%"
-            :chart-data="greenLineChart.chartData"
-            :gradient-stops="greenLineChart.gradientStops"
-            :extra-options="greenLineChart.extraOptions"
-          >
-          </line-chart>
-        </div>
-      </card>
-    </div>
-
-
-    <!-- Stats Cards -->
-    <div class="col-lg-3 col-md-6" v-for="card in statsCards" :key="card.title">
-      <stats-card
-        :title="card.title"
-        :sub-title="card.subTitle"
-        :type="card.type"
-        :icon="card.icon"
-      >
-        <div slot="footer" v-html="card.footer"></div>
-      </stats-card>
+    <div class="row col-lg-12 col-md-12" v-if="getUserRole !== 'client'">
+      <!-- Small charts -->
+      <div class="col-lg-4" :class="{ 'text-right': isRTL }">
+        <card type="chart">
+          <template slot="header">
+            <h5 class="card-category">Total Contratos</h5>
+            <h3 class="card-title">
+              <i class="tim-icons icon-bell-55 text-primary"></i> 763,215
+            </h3>
+          </template>
+          <div class="chart-area">
+            <line-chart
+              style="height: 100%"
+              :chart-data="purpleLineChart.chartData"
+              :gradient-colors="purpleLineChart.gradientColors"
+              :gradient-stops="purpleLineChart.gradientStops"
+              :extra-options="purpleLineChart.extraOptions"
+            >
+            </line-chart>
+          </div>
+        </card>
+      </div>
+      <div class="col-lg-4" :class="{ 'text-right': isRTL }">
+        <card type="chart">
+          <template slot="header">
+            <h5 class="card-category">Total de Ventas</h5>
+            <h3 class="card-title">
+              <i class="tim-icons icon-delivery-fast text-info"></i> 3,500,000$
+            </h3>
+          </template>
+          <div class="chart-area">
+            <bar-chart
+              style="height: 100%"
+              :chart-data="blueBarChart.chartData"
+              :gradient-stops="blueBarChart.gradientStops"
+              :extra-options="blueBarChart.extraOptions"
+            >
+            </bar-chart>
+          </div>
+        </card>
+      </div>
+      <div class="col-lg-4" :class="{ 'text-right': isRTL }">
+        <card type="chart">
+          <template slot="header">
+            <h5 class="card-category">Total de Clientes</h5>
+            <h3 class="card-title">
+              <i class="tim-icons icon-send text-success"></i> 1,100K
+            </h3>
+          </template>
+          <div class="chart-area">
+            <line-chart
+              style="height: 100%"
+              :chart-data="greenLineChart.chartData"
+              :gradient-stops="greenLineChart.gradientStops"
+              :extra-options="greenLineChart.extraOptions"
+            >
+            </line-chart>
+          </div>
+        </card>
+      </div>
     </div>
 
-    <div class="col-lg-12">
+    <div class="row col-lg-12 col-md-12" v-if="getUserRole === 'client'">
+      <div class="col-lg-3 col-md-6">
+        <stats-card
+          :title="formatCurrency(paymentsData)"
+          :sub-title="'Pagos del Mes'"
+          :type="'warning'"
+          :icon="'tim-icons icon-money-coins'"
+        >
+        </stats-card>
+      </div>
+
+      <div class="col-lg-3 col-md-6">
+        <stats-card
+          :title="landsSoldData"
+          :sub-title="'Terrenos Comprados'"
+          :type="'warning'"
+          :icon="'tim-icons icon-molecule-40'"
+        >
+        </stats-card>
+      </div>
+
+      <div class="col-lg-3 col-md-6">
+        <stats-card
+          :title="formatCurrency(totalPaidData)"
+          :sub-title="'Total Pagado'"
+          :type="'warning'"
+          :icon="'tim-icons icon-coins'"
+        >
+        </stats-card>
+      </div>
+    </div>
+    <div class="row col-lg-12 col-md-12" v-else>
+      <!-- Stats Cards -->
+      <div class="col-lg-3 col-md-6" v-for="card in statsCards" :key="card.title">
+        <stats-card
+          :title="card.title"
+          :sub-title="card.subTitle"
+          :type="card.type"
+          :icon="card.icon"
+        >
+          <div slot="footer" v-html="card.footer"></div>
+        </stats-card>
+      </div>
+    </div>
+
+    <div class="col-lg-12" v-if="getUserRole === 'client'">
       <card class="card" :header-classes="{ 'text-right': isRTL }">
-        <h5 slot="header" class="card-title">Tabla de control</h5>
-        <div class="table-responsive"><user-table></user-table></div>
+        <h5 slot="header" class="card-title">Contratos</h5>
+        <div class="table-responsive"><my-contracts></my-contracts></div>
       </card>
     </div>
   </div>
@@ -88,9 +122,12 @@ import * as chartConfigs from "@/components/Charts/config";
 import UserTable from "./UserTable";
 import StatsCard from "src/components/Cards/StatsCard";
 import config from "@/config";
+import MyContracts from "@/pages/Dashboard/ContractTable.vue";
+import { mapActions, mapGetters } from "vuex";
 
 export default {
   components: {
+    MyContracts,
     LineChart,
     BarChart,
     StatsCard,
@@ -207,6 +244,16 @@ export default {
     };
   },
   computed: {
+    ...mapGetters(["getPaymentsByMonth", "getLandsSold", "getTotalPaid", "getUserRole"]),
+    paymentsData() {
+      return this.getPaymentsByMonth;
+    },
+    landsSoldData() {
+      return this.getLandsSold;
+    },
+    totalPaidData() {
+      return this.getTotalPaid;
+    },
     enableRTL() {
       return this.$route.query.enableRTL;
     },
@@ -222,6 +269,16 @@ export default {
     },
   },
   methods: {
+    ...mapActions(["fetchPaymentsByMonth", "fetchLandsSold", "fetchTotalPaid"]),
+    loadPayments() {
+      this.fetchPaymentsByMonth();
+    },
+    loadLandsSold() {
+      this.fetchLandsSold();
+    },
+    loadTotalPaid() {
+      this.fetchTotalPaid();
+    },
     initBigChart(index) {
       let chartData = {
         datasets: [
@@ -250,6 +307,11 @@ export default {
       this.i18n.locale = "en";
       this.$rtl.disableRTL();
     }
+  },
+  created() {
+    this.loadPayments();
+    this.loadLandsSold();
+    this.loadTotalPaid();
   },
 };
 </script>

@@ -22,6 +22,9 @@ const state = {
     penalty_interest: 0.0,
     extraordinary_payment: 0.0,
   },
+  payments_by_month: "",
+  lands_sold: 0,
+  total_paid: "",
 };
 
 const getters = {
@@ -39,6 +42,18 @@ const getters = {
       payment.row_number = index + 1;
       return payment;
     });
+  },
+  getUserContracts(state) {
+    return state.contracts;
+  },
+  getPaymentsByMonth(state) {
+    return state.payments_by_month;
+  },
+  getLandsSold(state) {
+    return state.lands_sold;
+  },
+  getTotalPaid(state) {
+    return state.total_paid;
   },
 };
 
@@ -172,6 +187,104 @@ const actions = {
         });
     });
   },
+  fetchUserContracts({ commit }, user_id) {
+    const config = {
+      headers: {
+        Authorization: localStorage.getItem("auth_token"),
+      },
+    };
+    axios
+      .get(`${BASE_URL}/user_contracts/${user_id}`, config)
+      .then((response) => {
+        const formatedContracts = response.data.data.map((contract) => {
+          return {
+            id: contract.id,
+            client_id: contract.attributes["client-id"],
+            client_name: contract.attributes["client-name"],
+            land_id: contract.attributes["land_id"],
+            land_code: contract.attributes["land-code"],
+            contract_date: contract.attributes["contract-date"],
+            type: contract.attributes["contract-type"],
+            total_price: contract.attributes["total-price"],
+            total_paid: contract.attributes["total-paid"],
+            down_payment: contract.attributes["down-payment"],
+            monthly_payment: contract.attributes["monthly-payment"],
+            yearly_payment: contract.attributes["yearly-payment"],
+            months: contract.attributes["months"],
+            penalty_interest: contract.attributes["penalty-interest"],
+            extraordinary_payment: contract.attributes["extraordinary-payment"],
+            payments: contract.attributes["payments"],
+            progress:
+              (contract.attributes["total-paid"] * 100) /
+              contract.attributes["total-price"],
+          };
+        });
+        commit("setUserContracts", formatedContracts);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  },
+  fetchPaymentsByMonth({ commit }) {
+    return new Promise((resolve, reject) => {
+      const config = {
+        headers: {
+          Authorization: localStorage.getItem("auth_token"),
+        },
+      };
+      axios
+        .get(`${BASE_URL}/current_month_payments`, config)
+        .then((response) => {
+          const formatedPayments = response.data;
+          commit("setPaymentsByMonth", formatedPayments);
+          resolve(formatedPayments);
+        })
+        .catch((error) => {
+          console.error(error);
+          reject(error);
+        });
+    });
+  },
+  fetchLandsSold({ commit }) {
+    return new Promise((resolve, reject) => {
+      const config = {
+        headers: {
+          Authorization: localStorage.getItem("auth_token"),
+        },
+      };
+      axios
+        .get(`${BASE_URL}/lands_sold`, config)
+        .then((response) => {
+          const formatedLandsSold = response.data;
+          commit("setLandsSold", formatedLandsSold);
+          resolve(formatedLandsSold);
+        })
+        .catch((error) => {
+          console.error(error);
+          reject(error);
+        });
+    });
+  },
+  fetchTotalPaid({ commit }) {
+    return new Promise((resolve, reject) => {
+      const config = {
+        headers: {
+          Authorization: localStorage.getItem("auth_token"),
+        },
+      };
+      axios
+        .get(`${BASE_URL}/total_paid`, config)
+        .then((response) => {
+          const formatedTotalPaid = response.data;
+          commit("setTotalPaid", formatedTotalPaid);
+          resolve(formatedTotalPaid);
+        })
+        .catch((error) => {
+          console.error(error);
+          reject(error);
+        });
+    });
+  },
 };
 
 const mutations = {
@@ -192,6 +305,18 @@ const mutations = {
     if (index !== -1) {
       state.contracts.splice(index, 1);
     }
+  },
+  setUserContracts(state, contracts) {
+    state.contracts = contracts;
+  },
+  setPaymentsByMonth(state, payments) {
+    state.payments_by_month = payments;
+  },
+  setLandsSold(state, lands_sold) {
+    state.lands_sold = lands_sold;
+  },
+  setTotalPaid(state, payments) {
+    state.total_paid = payments;
   },
 };
 

@@ -73,7 +73,7 @@
                   </template>
                 </template>
               </el-table-column>
-              <el-table-column :min-width="135" align="right" label="Actions">
+              <el-table-column :min-width="135" align="right" label="Acciones">
                 <div slot-scope="props">
                   <base-button
                     @click.native="handleShow(props.row)"

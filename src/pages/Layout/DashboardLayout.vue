@@ -17,6 +17,14 @@
         >
         </sidebar-item>
         <sidebar-item
+          :link="{
+            name: $t('sidebar.profile'),
+            icon: 'tim-icons icon-user-run',
+            path: `profile/${userId}/edit`,
+          }"
+        >
+        </sidebar-item>
+        <sidebar-item
           v-permission="'residential.index'"
           :link="{
             name: $t('sidebar.neighborhood'),
@@ -72,6 +80,7 @@
           }"
         ></sidebar-item>
         <sidebar-item
+          :is-visible="(userRole === 'admin')"
           :link="{
             name: $t('sidebar.balance'),
             icon: 'tim-icons icon-chart-bar-32',
@@ -122,8 +131,18 @@ import DashboardNavbar from "./DashboardNavbar.vue";
 import ContentFooter from "./ContentFooter.vue";
 import SidebarFixedToggleButton from "./SidebarFixedToggleButton.vue";
 import { ZoomCenterTransition } from "vue2-transitions";
+import { mapGetters } from "vuex";
 
 export default {
+  computed: {
+    ...mapGetters(["getUserID", "getUserRole"]),
+    userId() {
+      return this.getUserID;
+    },
+    userRole() {
+      return this.getUserRole;
+    },
+  },
   components: {
     DashboardNavbar,
     ContentFooter,

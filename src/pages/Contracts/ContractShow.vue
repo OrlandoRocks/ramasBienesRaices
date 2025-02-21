@@ -2,11 +2,18 @@
   <div class="row" id="pdf">
     <div class="col-md-12">
       <card>
-        <h4 slot="header" class="card-title"><b>Contrato</b></h4>
-
-        <base-button @click="generatePDF" type="text">
-          <i class="tim-icons el-icon-document"> </i> Descargar PDF
-        </base-button>
+        <div slot="header">
+          <div class="row">
+            <div class="col-md-10">
+              <h4 class="card-title"><b>Contrato</b></h4>
+            </div>
+            <div class="col-md-2">
+              <base-button @click="generatePDF" type="text">
+                <i class="tim-icons el-icon-document"> </i> Descargar PDF
+              </base-button>
+            </div>
+          </div>
+        </div>
 
         <div class="card-body">
           <div class="typography-line">
@@ -326,14 +333,55 @@ export default {
     generatePDF() {
       const doc = new jsPDF();
       var totalPagesExp = "{total_pages_count_string}";
-
       var finalY = doc.lastAutoTable.finalY || 10;
+
+      // doc.setFontSize(16);
+      // doc.setFont("Helvetica", "normal", "bold");
+      // doc.text("Cliente", 14, finalY + 15);
+      doc.setFont("Helvetica", "", "normal");
+      doc.setFontSize(11);
       doc.setFont("Helvetica", "normal", "bold");
-      doc.text("Contrato", 14, finalY + 15);
+      doc.text("Nombre:", 14, finalY);
+      doc.setFont("Helvetica", "", "normal");
+      doc.text(this.clientInfo.full_name, 31, finalY);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Teléfono:", 125, finalY);
+      doc.setFont("Helvetica", "", "normal");
+      doc.text(this.clientInfo.phone_number, 143, finalY);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Email:", 14, finalY + 8);
+      doc.setFont("Helvetica", "", "normal");
+      doc.text(this.clientInfo.email, 27, finalY + 8);
+
+      finalY += 16;
+
+      doc.setFontSize(11);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Fraccionamiento Terreno:", 14, finalY);
+      doc.setFont("Helvetica", "", "normal");
+      doc.text(this.landInfo.residential_name, 63, finalY);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Dirección Terreno:", 125, finalY);
+      doc.setFont("Helvetica", "", "normal");
+      doc.text(this.landInfo.address, 161, finalY);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Código Terreno:", 14, finalY + 8);
+      doc.setFont("Helvetica", "", "normal");
+      doc.text(this.landInfo.land_code, 45, finalY + 8);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Tamaño Terreno:", 125, finalY + 8);
+      doc.setFont("Helvetica", "", "normal");
+      doc.text(this.landInfo.size + "m²", 158, finalY + 8);
+
+      finalY += 20;
+
+      doc.setFontSize(16);
+      doc.setFont("Helvetica", "normal", "bold");
+      doc.text("Contrato", 14, finalY + 8);
       doc.setFont("Helvetica", "", "normal");
       autoTable(doc, {
         // columnStyles: { europe: { halign: 'center' } }, // European countries centered
-        startY: finalY + 20,
+        startY: finalY + 15,
         body: [
           {
             contract_date: this.contractInfo.contract_date,
@@ -358,87 +406,6 @@ export default {
         ],
       });
 
-      finalY = doc.lastAutoTable.finalY;
-      doc.setFontSize(16);
-      doc.setFont("Helvetica", "normal", "bold");
-      doc.text("Cliente", 14, finalY + 15);
-      doc.setFont("Helvetica", "", "normal");
-      doc.setFontSize(11);
-      doc.setFont("Helvetica", "normal", "bold");
-      doc.text("Nombre:", 14, finalY + 25);
-      doc.setFont("Helvetica", "", "normal");
-      doc.text(this.clientInfo.full_name, 31, finalY + 25);
-      doc.setFont("Helvetica", "normal", "bold");
-      doc.text("Teléfono:", 140, finalY + 25);
-      doc.setFont("Helvetica", "", "normal");
-      doc.text(this.clientInfo.phone_number, 158, finalY + 25);
-      doc.setFont("Helvetica", "normal", "bold");
-      doc.text("Email:", 14, finalY + 33);
-      doc.setFont("Helvetica", "", "normal");
-      doc.text(this.clientInfo.email, 27, finalY + 33);
-      // autoTable(doc, {
-      //   // columnStyles: { europe: { halign: 'center' } }, // European countries centered
-      //   startY: finalY + 20,
-      //   body: [
-      //     {
-      //       full_name: this.clientInfo.full_name,
-      //       phone_number: this.clientInfo.phone_number,
-      //       email: this.clientInfo.email,
-      //       // address: this.clientInfo.address,
-      //       // rfc: this.clientInfo.rfc,
-      //     },
-      //   ],
-      //   columns: [
-      //     { header: "Nombre", dataKey: "full_name" },
-      //     { header: "Teléfono", dataKey: "phone_number" },
-      //     { header: "Email", dataKey: "email" },
-      //     // { header: "Dirección", dataKey: "address" },
-      //     // { header: "RFC", dataKey: "rfc" },
-      //   ],
-      // });
-
-      finalY = doc.lastAutoTable.finalY + 40;
-      doc.setFontSize(16);
-      doc.setFont("Helvetica", "normal", "bold");
-      doc.text("Terreno", 14, finalY + 15);
-      doc.setFontSize(11);
-      doc.setFont("Helvetica", "normal", "bold");
-      doc.text("Fraccionamiento:", 14, finalY + 25);
-      doc.setFont("Helvetica", "", "normal");
-      doc.text(this.landInfo.residential_name, 47, finalY + 25);
-      doc.setFont("Helvetica", "normal", "bold");
-      doc.text("Dirección:", 125, finalY + 25);
-      doc.setFont("Helvetica", "", "normal");
-      doc.text(this.landInfo.address, 145, finalY + 25);
-      doc.setFont("Helvetica", "normal", "bold");
-      doc.text("Código:", 14, finalY + 33);
-      doc.setFont("Helvetica", "", "normal");
-      doc.text(this.landInfo.land_code, 29, finalY + 33);
-      doc.setFont("Helvetica", "normal", "bold");
-      doc.text("Tamaño:", 125, finalY + 33);
-      doc.setFont("Helvetica", "", "normal");
-      doc.text(this.landInfo.size + "m²", 142, finalY + 33);
-      // autoTable(doc, {
-      //   // columnStyles: { europe: { halign: 'center' } }, // European countries centered
-      //   startY: finalY + 20,
-      //   body: [
-      //     {
-      //       residential_name: this.landInfo.residential_name,
-      //       address: this.landInfo.address,
-      //       land_code: this.landInfo.land_code,
-      //       size: this.landInfo.size + "m²",
-      //       // house_number: this.landInfo.house_number,
-      //     },
-      //   ],
-      //   columns: [
-      //     { header: "Fraccionamiento", dataKey: "residential_name" },
-      //     { header: "Dirección", dataKey: "address" },
-      //     { header: "Código", dataKey: "land_code" },
-      //     { header: "Tamaño", dataKey: "size" },
-      //     // { header: "Número de Casa", dataKey: "house_number" },
-      //   ],
-      // });
-
       const paymentColumns = [
         "Total a Pagar",
         "Pago",
@@ -446,10 +413,10 @@ export default {
         "Fecha de Pago",
         "Estatus",
       ];
-      finalY = doc.lastAutoTable.finalY + 75;
+      finalY = doc.lastAutoTable.finalY + 10;
       doc.setFontSize(16);
       doc.setFont("Helvetica", "normal", "bold");
-      doc.text("Pagos", 14, finalY + 15);
+      doc.text("Pagos", 14, finalY + 8);
       doc.setFont("Helvetica", "", "normal");
       const rows = this.paymentData.map((row) => [
         this.formatCurrency(row.total) + " MXN",
@@ -459,17 +426,9 @@ export default {
         row.payment_status_name,
       ]);
       autoTable(doc, {
-        // columnStyles: { europe: { halign: 'center' } }, // European countries centered
-        startY: finalY + 20,
+        startY: finalY + 15,
         head: [paymentColumns],
         body: rows,
-        // columns: [
-        //   { header: "Total a Pagar", dataKey: "total" },
-        //   { header: "Pago", dataKey: "amount" },
-        //   { header: "Número de Pago", dataKey: "row_number" },
-        //   { header: "Fecha de Pago", dataKey: "payment_date" },
-        //   { header: "Estatus", dataKey: "payment_status_name" },
-        // ],
         didDrawPage: function (data) {
           // Footer
           var str = "Página " + doc.internal.getNumberOfPages();
@@ -478,7 +437,6 @@ export default {
             str = str + " de " + totalPagesExp;
           }
           doc.setFontSize(10);
-
           // jsPDF 1.4+ uses getHeight, <1.4 uses .height
           var pageSize = doc.internal.pageSize;
           var pageHeight = pageSize.height

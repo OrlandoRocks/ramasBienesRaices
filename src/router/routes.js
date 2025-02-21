@@ -481,6 +481,12 @@ const routes = [
         components: { default: Widgets },
         meta: { permission: true },
       },
+      {
+        path: "profile/:id/edit",
+        name: "User",
+        component: User,
+        meta: { permission: { model: "dashboard", action: "index" } },
+      },
     ],
     meta: { requiresAuth: true },
   },
