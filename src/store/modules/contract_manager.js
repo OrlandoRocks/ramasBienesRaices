@@ -99,6 +99,7 @@ const state = {
   payments_by_month: "",
   lands_sold: 0,
   total_paid: "",
+  pdf_content: "",
 };
 
 const getters = {
@@ -130,6 +131,9 @@ const getters = {
   },
   getTotalPaid(state) {
     return state.total_paid;
+  },
+  getContractPdf(state) {
+    return state.pdf_content;
   },
 };
 
@@ -397,6 +401,91 @@ const actions = {
         });
     });
   },
+  fetchContractPdf({ commit }, id) {
+    return new Promise((resolve, reject) => {
+      const config = {
+        headers: {
+          Authorization: localStorage.getItem("auth_token"),
+        },
+      };
+      axios
+        .get(`${BASE_URL}/contracts/${id}/preview_template`, config)
+        .then((response) => {
+          const rawHtml = response.data.html;
+          commit("setContractPdf", rawHtml);
+          resolve(rawHtml);
+        })
+        .catch((error) => {
+          console.error(error);
+          reject(error);
+        });
+    });
+  },
+  fetchContractTemplate({ commit }, id) {
+    return new Promise((resolve, reject) => {
+      const config = {
+        headers: {
+          Authorization: localStorage.getItem("auth_token"),
+        },
+      };
+      axios
+        .get(`${BASE_URL}/contracts/${id}/preview_template`, config)
+        .then((response) => {
+          resolve(response.data.html);
+        })
+        .catch((error) => {
+          console.error("Error cargando plantilla:", error);
+          reject(error);
+        });
+    });
+  },
+
+  generateContractPdf({ commit }, { id, html_content }) {
+    return new Promise((resolve, reject) => {
+      const config = {
+        responseType: "blob", // MUY IMPORTANTE para descargar archivos
+        headers: {
+          Authorization: localStorage.getItem("auth_token"),
+          Accept: "application/pdf",
+        },
+      };
+      axios
+        .post(
+          `${BASE_URL}/contracts/${id}/generate_custom_pdf.pdf`,
+          { html_content },
+          config
+        )
+        .then((response) => {
+          resolve(response.data);
+        })
+        .catch((error) => {
+          console.error("Error generando PDF:", error);
+          reject(error);
+        });
+    });
+  },
+  saveContractVersion({ commit }, { id, html_content }) {
+    return new Promise((resolve, reject) => {
+      const config = {
+        headers: {
+          Authorization: localStorage.getItem("auth_token"),
+        },
+      };
+      axios
+        .post(
+          `${BASE_URL}/contracts/${id}/save_version`,
+          { html_content },
+          config
+        )
+        .then((response) => {
+          resolve(response.data);
+        })
+        .catch((error) => {
+          console.error("Error guardando versión:", error);
+          reject(error);
+        });
+    });
+  },
 };
 
 const mutations = {
@@ -455,6 +544,9 @@ const mutations = {
   },
   setTotalPaid(state, payments) {
     state.total_paid = payments;
+  },
+  setContractPdf(state, pdf) {
+    state.pdf_content = pdf;
   },
 };
 

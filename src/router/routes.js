@@ -92,6 +92,7 @@ const UsersList = () => import("src/pages/Admin/UsersList.vue");
 const UserForm = () => import("src/pages/Admin/UserForm.vue");
 
 const ContractShow = () => import("src/pages/Contracts/ContractShow.vue");
+const ContractEditor = () => import("src/pages/Contracts/ContractEditor.vue");
 
 const RegularTables = () =>
   import(/* webpackChunkName: "tables" */ "src/pages/Tables/RegularTables.vue");
@@ -305,6 +306,13 @@ let contractsMenu = {
       path: ":id/show",
       name: "ShowContract",
       components: { default: ContractShow },
+      meta: { permission: { model: "contract", action: "show" } },
+    },
+    {
+      path: "preview_template/:id",
+      name: "EditorContract",
+      components: { default: ContractEditor },
+      meta: { permission: { model: "contract", action: "show" } },
     },
   ],
   meta: { requiresAuth: true },
