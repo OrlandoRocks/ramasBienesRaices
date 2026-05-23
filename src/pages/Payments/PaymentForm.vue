@@ -44,8 +44,7 @@
 
           <div class="typography-line">
             <h3>
-              <span><b>Estatus:</b></span
-              >
+              <span><b>Estatus:</b></span>
               <p class="text-success">
                 {{ payment_status_name }}
               </p>

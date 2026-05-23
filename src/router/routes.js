@@ -86,8 +86,8 @@ const ExpensesTable = () => import("src/pages/Expense/ExpenseTable.vue");
 const ContractsTable = () => import("src/pages/Contracts/ContractTable.vue");
 const PaymentsTable = () => import("src/pages/Payments/PaymentTable.vue");
 
-
 const ContractShow = () => import("src/pages/Contracts/ContractShow.vue");
+const ContractEditor = () => import("src/pages/Contracts/ContractEditor.vue");
 
 const RegularTables = () =>
   import(/* webpackChunkName: "tables" */ "src/pages/Tables/RegularTables.vue");
@@ -241,16 +241,19 @@ let residentialsMenu = {
       path: "",
       name: "Residentials",
       components: { default: ResidentialsTable },
+      meta: { permission: { model: "residential", action: "index" } },
     },
     {
       path: "new",
       name: "CreateResidential",
       components: { default: ResidentialForm },
+      meta: { permission: { model: "residential", action: "create" } },
     },
     {
       path: ":id/edit",
       name: "EditResidential",
       components: { default: ResidentialForm },
+      meta: { permission: { model: "residential", action: "show" } },
     },
   ],
   meta: { requiresAuth: true },
@@ -266,16 +269,25 @@ let contractsMenu = {
       path: "",
       name: "Contracts",
       components: { default: ContractsTable },
+      meta: { permission: { model: "contract", action: "index" } },
     },
     {
       path: "new",
       name: "CreateContract",
       components: { default: ContractWizard },
+      meta: { permission: { model: "contract", action: "create" } },
     },
     {
       path: ":id/show",
       name: "ShowContract",
       components: { default: ContractShow },
+      meta: { permission: { model: "contract", action: "show" } },
+    },
+    {
+      path: "preview_template/:id",
+      name: "EditorContract",
+      components: { default: ContractEditor },
+      meta: { permission: { model: "contract", action: "show" } },
     },
   ],
 };
@@ -290,16 +302,19 @@ let landsMenu = {
       path: "",
       name: "Lands",
       components: { default: LandsTable },
+      meta: { permission: { model: "land", action: "index" } },
     },
     {
       path: "new",
       name: "CreateLand",
       components: { default: LandForm },
+      meta: { permission: { model: "land", action: "create" } },
     },
     {
       path: ":id/edit",
       name: "EditLand",
       components: { default: LandForm },
+      meta: { permission: { model: "land", action: "show" } },
     },
   ],
 };
@@ -314,11 +329,13 @@ let paymentsMenu = {
       path: "",
       name: "Payments",
       components: { default: PaymentsTable },
+      meta: { permission: { model: "payment", action: "index" } },
     },
     {
       path: ":id/edit",
       name: "EditPayment",
       components: { default: PaymentForm },
+      meta: { permission: { model: "payment", action: "show" } },
     },
   ],
 };
@@ -333,16 +350,19 @@ let clientsMenu = {
       path: "",
       name: "Clients",
       components: { default: ClientTable },
+      meta: { permission: { model: "client", action: "index" } },
     },
     {
       path: "new",
       name: "CreateClient",
       components: { default: ClientForm },
+      meta: { permission: { model: "client", action: "create" } },
     },
     {
       path: ":id/edit",
       name: "EditClient",
       components: { default: ClientForm },
+      meta: { permission: { model: "client", action: "show" } },
     },
   ],
   meta: { requiresAuth: true },
@@ -358,16 +378,19 @@ let expensesMenu = {
       path: "",
       name: "Expenses",
       components: { default: ExpensesTable },
+      meta: { permission: { model: "expense", action: "index" } },
     },
     {
       path: "new",
       name: "CreateExpense",
       components: { default: ExpenseForm },
+      meta: { permission: { model: "expense", action: "create" } },
     },
     {
       path: ":id/edit",
       name: "EditExpense",
       components: { default: ExpenseForm },
+      meta: { permission: { model: "expense", action: "show" } },
     },
   ],
   meta: { requiresAuth: true },
@@ -383,12 +406,14 @@ let balanceMenu = {
       path: "",
       name: "Balance",
       components: { default: BalanceIndex },
+      meta: { permission: { model: "dashboard", action: "index" } },
     },
     {
       path: "/get_balance_data",
       name: "BalanceData",
       components: { default: BalanceIndex },
-    }
+      meta: { permission: { model: "dashboard", action: "index" } },
+    },
   ],
   meta: { requiresAuth: true },
 };
@@ -402,11 +427,13 @@ let authPages = {
       path: "/login",
       name: "Login",
       component: Login,
+      meta: { permission: { model: "dashboard", action: "index" } },
     },
     {
       path: "/register",
       name: "Register",
       component: Register,
+      meta: { permission: { model: "dashboard", action: "index" } },
     },
   ],
   meta: { requiresAuth: false },
@@ -440,21 +467,31 @@ const routes = [
         path: "dashboard",
         name: "Dashboard",
         components: { default: Dashboard },
+        meta: { permission: { model: "dashboard", action: "index" } },
       },
       {
         path: "calendar",
         name: "Calendar",
         components: { default: Calendar },
+        meta: { permission: { model: "dashboard", action: "index" } },
       },
       {
         path: "charts",
         name: "Charts",
         components: { default: Charts },
+        meta: { permission: { model: "dashboard", action: "index" } },
       },
       {
         path: "widgets",
         name: "Widgets",
         components: { default: Widgets },
+        meta: { permission: true },
+      },
+      {
+        path: "profile/:id/edit",
+        name: "User",
+        component: User,
+        meta: { permission: { model: "dashboard", action: "index" } },
       },
     ],
     meta: { requiresAuth: true },

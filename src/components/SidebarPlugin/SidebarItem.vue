@@ -4,6 +4,7 @@
     :to="link.path ? link.path : '/'"
     :class="{ active: isActive }"
     tag="li"
+    v-if="isVisible"
   >
     <a
       v-if="isMenu"
@@ -86,6 +87,10 @@ export default {
       },
       description:
         "Sidebar link. Can contain name, path, icon and other attributes. See examples for more info",
+    },
+    isVisible: {
+      type: Boolean,
+      default: true,
     },
   },
   provide() {

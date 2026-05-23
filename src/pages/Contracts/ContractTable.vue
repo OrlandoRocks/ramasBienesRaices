@@ -25,7 +25,11 @@
                 >
                 </el-option>
               </el-select>
-              <base-button @click="goToCreateContract" type="info">
+              <base-button
+                v-permission="'contract.create'"
+                @click="goToCreateContract"
+                type="info"
+              >
                 <i class="tim-icons icon-simple-add"> </i> Crear Nuevo
               </base-button>
               <base-input>
@@ -69,17 +73,41 @@
                   </template>
                 </template>
               </el-table-column>
-              <el-table-column :min-width="135" align="right" label="Actions">
+              <el-table-column :min-width="135" align="right" label="Acciones">
                 <div slot-scope="props">
-                  <base-button
-                    @click.native="handleShow(props.row)"
-                    class="edit btn-link"
-                    type="warning"
-                    size="sm"
-                    icon
+                  <el-tooltip
+                    content="Ver Contrato"
+                    effect="light"
+                    :open-delay="300"
+                    placement="top"
                   >
-                    <i class="tim-icons icon-zoom-split"></i>
-                  </base-button>
+                    <base-button
+                      @click.native="handleShow(props.row)"
+                      class="edit btn-link"
+                      type="warning"
+                      size="sm"
+                      icon
+                    >
+                      <i class="tim-icons icon-zoom-split"></i>
+                    </base-button>
+                  </el-tooltip>
+
+                  <el-tooltip
+                    content="Descargar Contrato"
+                    effect="light"
+                    :open-delay="300"
+                    placement="top"
+                  >
+                    <base-button
+                      @click.native="handleEditor(props.row)"
+                      class="edit btn-link"
+                      type="warning"
+                      size="sm"
+                      icon
+                    >
+                      <i class="tim-icons icon-cloud-download-93"></i>
+                    </base-button>
+                  </el-tooltip>
                 </div>
               </el-table-column>
             </el-table>
@@ -219,6 +247,9 @@ export default {
     },
     goToCreateContract() {
       this.$router.push({ name: "CreateContract" });
+    },
+    handleEditor(row) {
+      this.$router.push(`/contracts/preview_template/${row.id}`);
     },
   },
   mounted() {

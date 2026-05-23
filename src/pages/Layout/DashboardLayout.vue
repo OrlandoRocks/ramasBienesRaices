@@ -18,12 +18,23 @@
         </sidebar-item>
         <sidebar-item
           :link="{
+            name: $t('sidebar.profile'),
+            icon: 'tim-icons icon-user-run',
+            path: `profile/${userId}/edit`,
+          }"
+        >
+        </sidebar-item>
+        <sidebar-item
+          v-permission="'residential.index'"
+          :link="{
             name: $t('sidebar.neighborhood'),
             icon: 'tim-icons icon-square-pin',
             path: '/residentials',
           }"
         ></sidebar-item>
+        <!--          :is-visible="hasPermission('land', 'index')"-->
         <sidebar-item
+          v-permission="'land.index'"
           :link="{
             name: $t('sidebar.lands'),
             icon: 'tim-icons icon-vector',
@@ -31,6 +42,7 @@
           }"
         ></sidebar-item>
         <sidebar-item
+          v-permission="'client.index'"
           :link="{
             name: $t('sidebar.clients'),
             icon: 'tim-icons icon-badge',
@@ -38,6 +50,7 @@
           }"
         ></sidebar-item>
         <sidebar-item
+          v-permission="'expense.index'"
           :link="{
             name: $t('sidebar.expenses'),
             icon: 'tim-icons icon-money-coins',
@@ -45,6 +58,7 @@
           }"
         ></sidebar-item>
         <sidebar-item
+          v-permission="'contract.index'"
           :link="{
             name: $t('sidebar.contracts'),
             icon: 'tim-icons icon-paper',
@@ -66,6 +80,7 @@
           }"
         ></sidebar-item>
         <sidebar-item
+          :is-visible="(userRole === 'admin')"
           :link="{
             name: $t('sidebar.balance'),
             icon: 'tim-icons icon-chart-bar-32',
@@ -116,8 +131,18 @@ import DashboardNavbar from "./DashboardNavbar.vue";
 import ContentFooter from "./ContentFooter.vue";
 import SidebarFixedToggleButton from "./SidebarFixedToggleButton.vue";
 import { ZoomCenterTransition } from "vue2-transitions";
+import { mapGetters } from "vuex";
 
 export default {
+  computed: {
+    ...mapGetters(["getUserID", "getUserRole"]),
+    userId() {
+      return this.getUserID;
+    },
+    userRole() {
+      return this.getUserRole;
+    },
+  },
   components: {
     DashboardNavbar,
     ContentFooter,

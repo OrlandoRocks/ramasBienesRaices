@@ -215,6 +215,7 @@
           </div>
           <div class="text-center">
             <base-button
+              v-permission="create_edit === 'Editar' ? 'client.update' : 'client.create'"
               :disabled="isSubmitting"
               native-type="submit"
               type="primary"

@@ -8,8 +8,10 @@ import store from "./store";
 import i18n from "./i18n";
 import "./registerServiceWorker";
 import currencyMixin from "./util/currency_mixin";
+import permissionMixin from "./util/permission_mixin";
 
 Vue.mixin(currencyMixin);
+Vue.mixin(permissionMixin);
 
 Vue.config.productionTip = false;
 

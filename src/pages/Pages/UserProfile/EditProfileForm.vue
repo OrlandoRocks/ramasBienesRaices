@@ -1,141 +1,166 @@
 <template>
-  <card>
-    <h5 slot="header" class="title">Edit Profile</h5>
-    <form @submit.prevent="updateProfile">
-      <div class="row">
-        <div class="col-md-5">
-          <base-input
-            type="text"
-            label="Company"
-            :disabled="true"
-            placeholder="Company"
-            v-model="user.company"
-          >
-          </base-input>
-        </div>
-        <div class="col-md-3">
-          <base-input
-            type="text"
-            label="Username"
-            placeholder="Username"
-            v-model="user.username"
-          >
-          </base-input>
-        </div>
-        <div class="col-md-4">
-          <base-input
-            type="email"
-            label="Email address"
-            placeholder="mike@email.com"
-            v-model="user.email"
-          >
-          </base-input>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-md-6">
-          <base-input
-            type="text"
-            label="First Name"
-            placeholder="First Name"
-            v-model="user.firstName"
-          >
-          </base-input>
-        </div>
-        <div class="col-md-6">
-          <base-input
-            type="text"
-            label="Last Name"
-            placeholder="Last Name"
-            v-model="user.lastName"
-          >
-          </base-input>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-md-12">
-          <base-input
-            type="text"
-            label="Address"
-            placeholder="Home Address"
-            v-model="user.address"
-          >
-          </base-input>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-md-4">
-          <base-input
-            type="text"
-            label="City"
-            placeholder="City"
-            v-model="user.city"
-          >
-          </base-input>
-        </div>
-        <div class="col-md-4">
-          <base-input
-            type="text"
-            label="Country"
-            placeholder="Country"
-            v-model="user.country"
-          >
-          </base-input>
-        </div>
-        <div class="col-md-4">
-          <base-input
-            label="Postal Code"
-            placeholder="ZIP Code"
-            v-model="user.postalCode"
-          >
-          </base-input>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-md-12">
-          <base-input label="About Me">
-            <textarea
-              class="form-control"
-              placeholder="ZIP Code"
-              v-model="user.aboutMe"
+  <div class="col-md-8">
+    <ValidationObserver v-slot="{ handleSubmit }">
+      <form @submit.prevent="handleSubmit(submit)">
+        <card>
+          <h4 slot="header" class="title">Editar Perfil</h4>
+          <div>
+            <div class="row">
+    <!--          <label class="col-sm-2 col-form-label">Nombre del Fracc</label>-->
+              <div class="col-md-4">
+                <ValidationProvider
+                  name="name"
+                  rules="required"
+                  v-slot="{ passed, failed, errors }"
+                >
+                  <base-input
+                    required
+                    label="Nombre"
+                    v-model="name"
+                    :error="errors[0]"
+                    :class="[{ 'has-success': passed }, { 'has-danger': failed }]"
+                  >
+                  </base-input>
+                </ValidationProvider>
+              </div>
+              <div class="col-md-4">
+                <ValidationProvider
+                  name="last_name"
+                  rules="required"
+                  v-slot="{ passed, failed, errors }"
+                >
+                  <base-input
+                    required
+                    label="Apellidos"
+                    v-model="last_name"
+                    :error="errors[0]"
+                    :class="[{ 'has-success': passed }, { 'has-danger': failed }]"
+                  >
+                  </base-input>
+                </ValidationProvider>
+              </div>
+              <div class="col-md-4">
+                <ValidationProvider
+                  name="email"
+                  rules="required|email"
+                  v-slot="{ passed, failed, errors }"
+                >
+                  <base-input
+                    required
+                    v-model="email"
+                    label="Correo Electrónico"
+                    type="email"
+                    :error="errors[0]"
+                    :class="[{ 'has-success': passed }, { 'has-danger': failed }]"
+                    :disabled="true"
+                  >
+                  </base-input>
+                </ValidationProvider>
+              </div>
+            </div>
+          </div>
+          <div class="text-center">
+            <base-button
+              :disabled="isSubmitting"
+              native-type="submit"
+              type="primary"
+              >{{ isEdit ? "Editar" : "Crear" }} Perfil</base-button
             >
-            </textarea>
-          </base-input>
-        </div>
-      </div>
-
-      <base-button native-type="submit" type="primary" class="btn-fill">
-        Save
-      </base-button>
-    </form>
-  </card>
+          </div>
+        </card>
+      </form>
+    </ValidationObserver>
+  </div>
 </template>
 <script>
+import swal from "sweetalert2";
+import { extend } from "vee-validate";
+import { required, email } from "vee-validate/dist/rules";
+import { mapGetters, mapActions } from "vuex";
+import {Option, Select} from "element-ui";
+
+extend("email", email);
+extend("required", required);
+
 export default {
+  components: {
+    [Select.name]: Select,
+    [Option.name]: Option,
+  },
+  computed: {
+    ...mapGetters(["getUserById"]),
+  },
   data() {
     return {
-      user: {
-        company: "Creative Code Inc.",
-        username: "michael23",
-        email: "",
-        firstName: "Mike",
-        lastName: "Andrew",
-        address: "Bld Mihail Kogalniceanu, nr. 8 Bl 1, Sc 1, Ap 09",
-        city: "New York",
-        country: "USA",
-        postalCode: "",
-        aboutMe: `Lamborghini Mercy, Your chick she so thirsty, I'm in that two seat Lambo.`,
-      },
+      id: "",
+      name: "",
+      last_name: "",
+      email: "",
+      role_id: 0,
+      isEdit: false,
+      isSubmitting: false,
     };
   },
   methods: {
-    updateProfile() {
-      alert("Your data: " + JSON.stringify(this.user));
+    ...mapActions(["fetchUserById", "updateUser"]),
+    loadUserData(id) {
+      this.fetchUserById(id)
+        .then((user) => {
+          this.id = user.id;
+          this.name = user.name;
+          this.last_name = user.last_name;
+          this.email = user.email;
+          this.role_id = String(user.role_id);
+          this.isEdit = true;
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     },
+    submit() {
+      this.isSubmitting = true;
+      let data = {
+        user: {
+          name: this.name,
+          last_name: this.last_name,
+          email: this.email,
+          role_id: this.role_id,
+          password: this.password,
+        },
+      };
+      if (this.isEdit) {
+        data.user.id = this.id;
+        this.updateUser(data)
+          .then(() => {
+            this.$notify({
+              title: "Success",
+              type: "success",
+              message: "Perfil actualizado con éxito.",
+              icon: "tim-icons icon-bell-55",
+            });
+            return true;
+          })
+          .catch((error) => {
+            console.log(error);
+            this.isSubmitting = false;
+            this.$notify({
+              title: "Error",
+              type: "danger",
+              message: "Error al actualizar el perfil.",
+              icon: "tim-icons icon-bell-55",
+            });
+          });
+      }
+    },
+  },
+  mounted() {
+  },
+  created() {
+    const userId = this.$route.params.id;
+    if (userId) {
+      this.loadUserData(userId);
+    }
+    this.isEdit = userId ? true : false;
   },
 };
 </script>

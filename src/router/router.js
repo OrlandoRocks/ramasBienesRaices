@@ -1,5 +1,7 @@
 import VueRouter from "vue-router";
 import routes from "./routes";
+import store from "@/store";
+import { Message } from "element-ui";
 
 // configure router
 const router = new VueRouter({
@@ -16,17 +18,32 @@ const router = new VueRouter({
 
 router.beforeEach((to, from, next) => {
   const isAuthenticated = !!localStorage.getItem("auth_token");
+  const permission = to.meta.permission;
+  const hasAccess =
+    permission.model === "dashboard"
+      ? true
+      : store.getters["hasPermission"](permission.model, permission.action);
+
   if (to.matched.some((record) => record.meta.requiresAuth)) {
     if (!isAuthenticated) {
       next({ name: "Login" });
     } else {
-      next();
+      if (!hasAccess) {
+        Message.error("No tienes permiso para acceder a esta página.");
+        next({ name: "Dashboard" });
+      } else {
+        next();
+      }
     }
   } else {
     if (isAuthenticated && to.name === "Login") {
       next({ name: "Dashboard" });
     } else {
-      next();
+      if (!hasAccess) {
+        next({ name: "Dashboard" });
+      } else {
+        next();
+      }
     }
   }
 });
