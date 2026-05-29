@@ -1,40 +1,52 @@
-import axios from "axios";
 import router from "@/router/router";
+import {
+  listClients,
+  getClient,
+  createClient as createClientApi,
+  updateClient as updateClientApi,
+  deleteClient as deleteClientApi,
+} from "@/services/clientsService";
+import { normalizeClientFromApi } from "@/util/clientApi";
+import { emptyDocumentsPayload } from "@/constants/clientDocuments";
 
-const BASE_URL = process.env.VUE_APP_BACKEND_URL;
+const emptyClient = () => ({
+  id: 0,
+  code: "",
+  full_name: "",
+  identification_card: "",
+  rfc: "",
+  address: "",
+  colony: "",
+  zip_code: "",
+  phone_number: "",
+  city: "",
+  state: "",
+  country: "",
+  assignee: "",
+  email: "",
+  birthday: "",
+  nationality: "",
+  civil_status: "",
+  spouse: "",
+  economic_dependants: false,
+  home_owner: false,
+  occupation: "",
+  company: "",
+  company_address: "",
+  company_phone: "",
+  monthly_income: 0,
+  monthly_expenses: 0,
+  comments: "",
+  image: "",
+  documents: emptyDocumentsPayload(),
+  ine_verification_status: "pending",
+  tax_document_verification_status: "pending",
+  proof_of_address_verification_status: "pending",
+});
 
 const state = {
   clients: [],
-  client: {
-    id: 0,
-    code: "",
-    full_name: "",
-    identification_card: "",
-    rfc: "",
-    address: "",
-    colony: "",
-    zip_code: "",
-    phone_number: "",
-    city: "",
-    state: "",
-    country: "",
-    assignee: "",
-    email: "",
-    birthday: "0000-00-00",
-    nationality: "",
-    civil_status: "",
-    spouse: "",
-    economic_dependants: false,
-    home_owner: false,
-    occupation: "",
-    company: "",
-    company_address: "",
-    company_phone: "",
-    monthly_income: 0.0,
-    monthly_expenses: 0.0,
-    comments: "",
-    image: "",
-  },
+  client: emptyClient(),
 };
 
 const getters = {
@@ -48,160 +60,67 @@ const getters = {
 
 const actions = {
   fetchClients({ commit }) {
-    const config = {
-      headers: {
-        Authorization: localStorage.getItem("auth_token"),
-      },
-    };
-    axios
-      .get(`${BASE_URL}/clients`, config)
+    return listClients()
       .then((response) => {
-        const formatedClients = response.data.map((client) => {
-          return {
-            id: client.id,
-            code: client.code,
-            full_name: client.full_name,
-            identification_card: client.identification_card,
-            rfc: client.rfc,
-            address: client.address,
-            colony: client.colony,
-            zip_code: client.zip_code,
-            phone_number: client.phone_number,
-            city: client.city,
-            state: client.state,
-            country: client.country,
-            assignee: client.assignee,
-            email: client.email,
-            birthday: client.birthday,
-            nationality: client.nationality,
-            civil_status: client.civil_status,
-            spouse: client.spouse,
-            economic_dependants: client.economic_dependants,
-            home_owner: client.home_owner,
-            occupation: client.occupation,
-            company: client.company,
-            company_address: client.company_address,
-            company_phone: client.company_phone,
-            monthly_income: client.monthly_income,
-            monthly_expenses: client.monthly_expenses,
-            comments: client.comments,
-            image: client.image,
-          };
-        });
-        commit("setClients", formatedClients);
+        const formatted = (response.data || []).map(normalizeClientFromApi);
+        commit("setClients", formatted);
+        return formatted;
       })
       .catch((error) => {
         console.error(error);
+        throw error;
       });
   },
   fetchClientById({ commit }, id) {
-    return new Promise((resolve, reject) => {
-      const config = {
-        headers: {
-          Authorization: localStorage.getItem("auth_token"),
-        },
-      };
-      axios
-        .get(`${BASE_URL}/clients/${id}`, config)
-        .then((response) => {
-          const client = response.data;
-          commit("setClient", {
-            id: client.id,
-            code: client.code,
-            full_name: client.full_name,
-            identification_card: client.identification_card,
-            rfc: client.rfc,
-            address: client.address,
-            colony: client.colony,
-            zip_code: client.zip_code,
-            phone_number: client.phone_number,
-            city: client.city,
-            state: client.state,
-            country: client.country,
-            assignee: client.assignee,
-            email: client.email,
-            birthday: client.birthday,
-            nationality: client.nationality,
-            civil_status: client.civil_status,
-            spouse: client.spouse,
-            economic_dependants: client.economic_dependants,
-            home_owner: client.home_owner,
-            occupation: client.occupation,
-            company: client.company,
-            company_address: client.company_address,
-            company_phone: client.company_phone,
-            monthly_income: client.monthly_income,
-            monthly_expenses: client.monthly_expenses,
-            comments: client.comments,
-            image: client.image,
-          });
-          resolve(client);
-        })
-        .catch((error) => {
-          console.error(error);
-          reject(error);
-        });
-    });
+    return getClient(id)
+      .then((response) => {
+        const client = normalizeClientFromApi(response.data);
+        commit("setClient", client);
+        return client;
+      })
+      .catch((error) => {
+        console.error(error);
+        throw error;
+      });
   },
-  createClient({ commit }, client) {
-    return new Promise((resolve, reject) => {
-      const config = {
-        headers: {
-          Authorization: localStorage.getItem("auth_token"),
-        },
-      };
-      axios
-        .post(`${BASE_URL}/clients`, client, config)
-        .then((response) => {
-          state.clients.push(response.data);
-          commit("setClients", state.clients);
-          router.push("/clients");
-          resolve(response.data);
-        })
-        .catch((error) => {
-          console.error(error);
-          reject(error);
-        });
-    });
+  createClient({ commit, state }, payload) {
+    return createClientApi(payload)
+      .then((response) => {
+        const client = normalizeClientFromApi(response.data);
+        commit("setClients", [...state.clients, client]);
+        router.push("/clients");
+        return client;
+      })
+      .catch((error) => {
+        console.error(error);
+        throw error;
+      });
   },
-  updateClient({ commit }, payload) {
-    return new Promise((resolve, reject) => {
-      const config = {
-        headers: {
-          Authorization: localStorage.getItem("auth_token"),
-        },
-      };
-      axios
-        .put(`${BASE_URL}/clients/${payload.client.id}`, payload, config)
-        .then((response) => {
-          commit("setClientUpdate", response.data);
-          router.push("/clients");
-          resolve(response.data);
-        })
-        .catch((error) => {
-          console.error(error);
-          reject(error);
-        });
-    });
+  updateClient({ commit, state }, payload) {
+    const id = payload.id || payload.client?.id;
+    return updateClientApi(id, payload)
+      .then((response) => {
+        const client = normalizeClientFromApi(response.data);
+        commit("setClientUpdate", client);
+        commit("setClient", client);
+        router.push("/clients");
+        return client;
+      })
+      .catch((error) => {
+        console.error(error);
+        throw error;
+      });
   },
-  deleteClient({ commit }, id) {
-    return new Promise((resolve, reject) => {
-      const config = {
-        headers: {
-          Authorization: localStorage.getItem("auth_token"),
-        },
-      };
-      axios
-        .delete(`${BASE_URL}/clients/${id}`, config)
-        .then((response) => {
-          commit("setDeleteClient", id);
-          resolve(response.data);
-        })
-        .catch((error) => {
-          console.error(error);
-          reject(error);
-        });
-    });
+  deleteClient({ commit, state }, id) {
+    return deleteClientApi(id)
+      .then((response) => {
+        commit("setDeleteClient", id);
+        return response.data;
+      })
+      .catch((error) => {
+        console.error(error);
+        throw error;
+      });
   },
 };
 

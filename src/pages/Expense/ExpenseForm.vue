@@ -210,12 +210,12 @@ export default {
     [Option.name]: Option,
   },
   computed: {
-    ...mapGetters(["getResidentials", "getUsersList", "getResidentialById"]),
+    ...mapGetters(["getResidentials", "getUsersForSelect", "getResidentialById"]),
     residentialsList() {
       return this.getResidentials;
     },
     usersList() {
-      return this.getUsersList;
+      return this.getUsersForSelect;
     },
   },
   data() {
@@ -322,7 +322,9 @@ export default {
     },
   },
   mounted() {
-    this.$store.dispatch("usersList");
+    if (this.$can("users.index")) {
+      this.$store.dispatch("fetchUsersForSelect");
+    }
     this.$store.dispatch("fetchResidentials");
   },
   created() {

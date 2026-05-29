@@ -149,6 +149,7 @@ import { extend } from "vee-validate";
 import { required, email } from "vee-validate/dist/rules";
 import "@/store/index.js";
 import { mapActions, mapGetters } from "vuex";
+import { getDefaultRouteForUser } from "@/util/userSession";
 
 extend("email", email);
 extend("required", required);
@@ -180,7 +181,11 @@ export default {
           password: this.password,
         },
       };
-      this.registerUser(data);
+      this.registerUser(data)
+        .then(() => {
+          this.$router.push(getDefaultRouteForUser(this.$store.getters.currentUser));
+        })
+        .catch(() => {});
       this.resetData();
     },
     submit() {

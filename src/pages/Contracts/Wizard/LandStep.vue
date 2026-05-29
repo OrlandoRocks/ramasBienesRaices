@@ -182,11 +182,26 @@ export default {
         return res;
       });
     },
+    applyRoutePrefill() {
+      const { land_id, residential_id } = this.$route.query;
+      if (residential_id) {
+        const rid = parseInt(residential_id, 10);
+        this.residential_id = Number.isNaN(rid) ? residential_id : rid;
+      }
+      if (land_id) {
+        const lid = parseInt(land_id, 10);
+        this.land_id = Number.isNaN(lid) ? land_id : lid;
+      }
+    },
   },
   mounted() {
-    this.$store.dispatch("fetchResidentials");
-    this.$store.dispatch("fetchLands");
-    this.$store.dispatch("fetchClients");
+    Promise.all([
+      this.$store.dispatch("fetchResidentials"),
+      this.$store.dispatch("fetchLands"),
+      this.$store.dispatch("fetchClients"),
+    ]).then(() => {
+      this.applyRoutePrefill();
+    });
   },
 };
 </script>

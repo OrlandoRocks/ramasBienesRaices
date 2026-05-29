@@ -25,7 +25,11 @@
                 >
                 </el-option>
               </el-select>
-              <base-button @click="goToCreateContract" type="info">
+              <base-button
+                v-if="$can('contracts.create')"
+                @click="goToCreateContract"
+                type="info"
+              >
                 <i class="tim-icons icon-simple-add"> </i> Crear Nuevo
               </base-button>
               <base-input>

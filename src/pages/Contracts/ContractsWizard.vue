@@ -66,12 +66,12 @@ export default {
     WizardTab,
   },
   computed: {
-    ...mapGetters(["getContractById", "getPayments"]),
+    ...mapGetters(["getContractById"]),
     contractInfo() {
       return this.getContractById;
     },
     payments() {
-      return this.getPayments;
+      return this.contractInfo.payments || [];
     },
   },
   methods: {
@@ -94,11 +94,13 @@ export default {
           payments_attributes: this.payments.map((payment) => ({
             amount: parseFloat(payment.payment).toFixed(2),
             payment_date: payment.payment_date,
-            status: "pending",
+            status: "Pendiente",
           })),
         },
       };
       this.createContract(payload).then(() => {
+        this.$root.$emit("refresh-map-tiles");
+
         this.$notify({
           message:
             "Se ha CREADO el contrato exitosamente. Puedes verlo en la lista de contratos.",
@@ -108,6 +110,13 @@ export default {
           verticalAlign: "top",
           type: "success",
         });
+
+        const landId = this.$route.query.land_id;
+        if (landId) {
+          this.$router.push({ name: "EditLand", params: { id: landId } });
+        } else {
+          this.$router.push({ name: "Contracts" });
+        }
       });
     },
   },

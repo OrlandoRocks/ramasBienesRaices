@@ -213,7 +213,7 @@
               </el-table-column>
             </el-table>
           </div>
-          <div class="text-center">
+          <div v-if="canSubmitLand" class="text-center">
             <base-button
               :disabled="isSubmitting"
               native-type="submit"
@@ -221,6 +221,29 @@
               >{{ create_edit }} Terrenos</base-button
             >
           </div>
+        </card>
+
+        <contract-payments-panel
+          v-if="showPayments"
+          :contract-id="contractId"
+          :payment-return-query="paymentReturnQuery"
+        />
+
+        <card v-if="showCreateContract" class="text-center">
+          <h4 slot="header" class="card-title">Contrato</h4>
+          <p class="text-muted mb-3">
+            Este terreno no tiene un contrato asociado. Cree un contrato para
+            registrar pagos.
+          </p>
+          <base-button
+            v-if="$can('contracts.create')"
+            type="primary"
+            class="btn-round"
+            @click="goToCreateContract"
+          >
+            <i class="tim-icons icon-paper"></i>
+            Crear contrato para este terreno
+          </base-button>
         </card>
       </form>
     </ValidationObserver>
@@ -233,6 +256,7 @@ import { extend } from "vee-validate";
 import { required, numeric } from "vee-validate/dist/rules";
 import { Option, Select } from "element-ui";
 import { mapActions, mapGetters } from "vuex";
+import ContractPaymentsPanel from "@/components/Contracts/ContractPaymentsPanel.vue";
 
 extend("required", required);
 extend("numeric", numeric);
@@ -244,6 +268,7 @@ export default {
     [TableColumn.name]: TableColumn,
     [Select.name]: Select,
     [Option.name]: Option,
+    ContractPaymentsPanel,
   },
   data() {
     return {
@@ -255,6 +280,9 @@ export default {
       house_number: "",
       price: "",
       residential_id: "",
+      client_id: null,
+      contract_id: null,
+      client_name: "",
       lands: [],
       create_edit: "Crear",
       isSubmitting: false,
@@ -279,6 +307,50 @@ export default {
         residential_name: this.getResidentialName(land.residential_id),
       }));
     },
+    isEditMode() {
+      return this.create_edit === "Editar";
+    },
+    canSubmitLand() {
+      if (this.isEditMode) {
+        return this.$can("lands.update");
+      }
+      return this.$can("lands.create");
+    },
+    hasClient() {
+      return Boolean(this.client_id) || Boolean(this.client_name);
+    },
+    hasContract() {
+      const contractId = this.contract_id;
+      if (
+        contractId === null ||
+        contractId === undefined ||
+        contractId === "" ||
+        contractId === "no"
+      ) {
+        return false;
+      }
+      return true;
+    },
+    showPayments() {
+      return (
+        this.isEditMode &&
+        this.hasClient &&
+        this.hasContract &&
+        (this.$can("payments.capture") || this.$can("contracts.payments"))
+      );
+    },
+    showCreateContract() {
+      return this.isEditMode && (!this.hasClient || !this.hasContract);
+    },
+    contractId() {
+      return this.contract_id;
+    },
+    paymentReturnQuery() {
+      return {
+        returnTo: "land",
+        landId: String(this.id),
+      };
+    },
   },
   methods: {
     ...mapActions([
@@ -298,11 +370,23 @@ export default {
           this.size = land.size;
           this.price = land.price;
           this.residential_id = land.residential_id;
+          this.client_id = land.client_id;
+          this.contract_id = land.contract_id;
+          this.client_name = land.client_name;
           this.create_edit = "Editar";
         })
         .catch((error) => {
           console.log(error);
         });
+    },
+    goToCreateContract() {
+      this.$router.push({
+        name: "CreateContract",
+        query: {
+          land_id: String(this.id),
+          residential_id: String(this.residential_id),
+        },
+      });
     },
     handleEdit(index, row) {
       this.land_code = row.land_code;
@@ -423,15 +507,21 @@ export default {
       this.isSubmitting = false;
     },
   },
+  watch: {
+    "$route.params.id": {
+      immediate: true,
+      handler(landId) {
+        if (landId) {
+          this.loadLandData(landId);
+          this.create_edit = "Editar";
+        } else {
+          this.create_edit = "Crear";
+        }
+      },
+    },
+  },
   mounted() {
     this.$store.dispatch("fetchResidentials");
-  },
-  created() {
-    const landId = this.$route.params.id;
-    if (landId) {
-      this.loadLandData(landId);
-    }
-    this.create_edit = landId ? "Editar" : "Crear";
   },
 };
 </script>

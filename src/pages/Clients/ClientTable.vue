@@ -25,7 +25,11 @@
                 >
                 </el-option>
               </el-select>
-              <base-button @click="goToCreateClient" type="info">
+              <base-button
+                v-if="$can('clients.create')"
+                @click="goToCreateClient"
+                type="info"
+              >
                 <i class="tim-icons icon-simple-add"> </i> Crear Nuevo
               </base-button>
               <base-input>
@@ -50,9 +54,25 @@
                 :label="column.label"
               >
               </el-table-column>
-              <el-table-column :min-width="135" align="right" label="Actions">
+              <el-table-column
+                v-if="$can('clients.show') || $can('clients.update') || $can('clients.destroy')"
+                :min-width="160"
+                align="right"
+                label="Actions"
+              >
                 <div slot-scope="props">
                   <base-button
+                    v-if="$can('clients.show')"
+                    @click.native="handleView(props.row)"
+                    class="btn-link"
+                    type="info"
+                    size="sm"
+                    icon
+                  >
+                    <i class="tim-icons icon-zoom-split"></i>
+                  </base-button>
+                  <base-button
+                    v-if="$can('clients.update')"
                     @click.native="handleEdit(props.$index, props.row)"
                     class="edit btn-link"
                     type="warning"
@@ -62,6 +82,7 @@
                     <i class="tim-icons icon-pencil"></i>
                   </base-button>
                   <base-button
+                    v-if="$can('clients.destroy')"
                     @click.native="handleDelete(props.$index, props.row)"
                     class="remove btn-link"
                     type="danger"
@@ -190,6 +211,9 @@ export default {
   },
   methods: {
     ...mapActions(["fetchClients", "deleteClient"]),
+    handleView(row) {
+      this.$router.push({ name: "ShowClient", params: { id: row.id } });
+    },
     handleEdit(index, row) {
       this.$router.push(`/clients/${row.id}/edit`);
     },

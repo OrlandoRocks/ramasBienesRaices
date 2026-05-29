@@ -1,12 +1,32 @@
 const path = require("path");
-const webpack = require("webpack");
 
 function resolveSrc(_path) {
   return path.join(__dirname, _path);
 }
+const devServerPort = Number(process.env.PORT || 8080);
+const wdsHost = process.env.WDS_SOCKET_HOST;
+
 // vue.config.js
 module.exports = {
   lintOnSave: true,
+  devServer: {
+    host: "0.0.0.0",
+    port: devServerPort,
+    allowedHosts: "all",
+    client: wdsHost
+      ? {
+          webSocketURL: {
+            protocol: "ws",
+            hostname: wdsHost,
+            pathname: "/ws",
+            port: Number(process.env.WDS_SOCKET_PORT || devServerPort),
+          },
+        }
+      : {
+          // Match whatever host/port you used in the browser (localhost vs LAN IP).
+          webSocketURL: "auto://0.0.0.0:0/ws",
+        },
+  },
   configureWebpack: {
     // Set up all the aliases we use in our app.
     resolve: {
@@ -25,25 +45,7 @@ module.exports = {
         util: require.resolve("util"),
       },
     },
-    plugins: [
-      new webpack.DefinePlugin({
-        "process.env": {
-          VUE_APP_AWS_ACCESS_KEY_ID: JSON.stringify(
-            process.env.VUE_APP_AWS_ACCESS_KEY_ID
-          ),
-          VUE_APP_AWS_SECRET_ACCESS: JSON.stringify(
-            process.env.VUE_APP_AWS_SECRET_ACCESS
-          ),
-          VUE_APP_BACKEND_URL: JSON.stringify(process.env.VUE_APP_BACKEND_URL),
-          VUE_APP_I18N_FALLBACK_LOCALE: JSON.stringify(
-            process.env.VUE_APP_I18N_FALLBACK_LOCALE
-          ),
-          VUE_APP_AWS_REGION: JSON.stringify(process.env.VUE_APP_AWS_REGION),
-          VUE_APP_I18N_LOCALE: JSON.stringify(process.env.VUE_APP_I18N_LOCALE),
-          PORT: JSON.stringify(process.env.PORT),
-        },
-      }),
-    ],
+    plugins: [],
   },
   pwa: {
     name: "Ramas Bienes Raices",
