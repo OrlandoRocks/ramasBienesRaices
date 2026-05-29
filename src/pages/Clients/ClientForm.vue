@@ -214,25 +214,30 @@
               </div>
             </div>
 
-            <div class="row">
-              <label class="col-sm-2 col-form-label">Credencial:</label>
-              <div class="col-sm-4">
-                <ValidationProvider
-                  name="credential"
-                  rules="required"
-                  v-slot="{ passed, failed, errors }"
-                >
-                  <base-input
-                    v-model="image"
-                    :error="errors[0]"
-                    :class="[
-                      { 'has-success': passed },
-                      { 'has-danger': failed },
-                    ]"
-                  ></base-input>
-                </ValidationProvider>
-              </div>
-            </div>
+            <client-documents-section
+              v-if="canManageDocuments"
+              :client="clientForDocuments"
+              :client-id="id || null"
+              :editable="true"
+              :pending-files="documentFiles"
+              :verification-statuses="verificationStatuses"
+              :field-errors="documentFieldErrors"
+              @file-selected="onDocumentFileSelected"
+              @field-error="onDocumentFieldError"
+              @verification-change="onVerificationChange"
+            />
+
+            <p
+              v-if="formErrors.length"
+              class="text-danger text-center small mb-3"
+            >
+              <span
+                v-for="(msg, index) in formErrors"
+                :key="index"
+                class="d-block"
+                >{{ msg }}</span
+              >
+            </p>
 
             <div class="text-center">
               <base-button
@@ -261,6 +266,10 @@ import {
 import { DatePicker, Select, Option } from "element-ui";
 import { mapActions, mapGetters } from "vuex";
 import locationData from "@/assets/locations_mexico.json";
+import ClientDocumentsSection from "@/components/Clients/ClientDocumentsSection.vue";
+import { validateClientDocuments } from "@/util/clientDocumentValidation";
+import { extractApiErrors } from "@/util/userApi";
+import { emptyDocumentsPayload } from "@/constants/clientDocuments";
 
 extend("required", required);
 extend("email", email);
@@ -274,9 +283,19 @@ export default {
     [DatePicker.name]: DatePicker,
     [Option.name]: Option,
     [Select.name]: Select,
+    ClientDocumentsSection,
   },
   computed: {
     ...mapGetters(["getClientById"]),
+    canManageDocuments() {
+      return this.$can("clients.create") || this.$can("clients.update");
+    },
+    clientForDocuments() {
+      return {
+        id: this.id,
+        documents: this.documents,
+      };
+    },
   },
   data() {
     return {
@@ -303,6 +322,11 @@ export default {
       lands: [],
       isEdit: false,
       isSubmitting: false,
+      documents: emptyDocumentsPayload(),
+      documentFiles: {},
+      documentFieldErrors: {},
+      verificationStatuses: {},
+      formErrors: [],
     };
   },
   methods: {
@@ -336,76 +360,140 @@ export default {
           this.state = res.state;
           this.city = res.city;
           this.image = res.image;
+          this.documents = res.documents || emptyDocumentsPayload();
+          this.verificationStatuses = {
+            ine_verification_status: res.ine_verification_status,
+            tax_document_verification_status: res.tax_document_verification_status,
+            proof_of_address_verification_status:
+              res.proof_of_address_verification_status,
+          };
           this.isEdit = true;
         })
         .catch((error) => {
-          console.log(error);
+          this.formErrors = extractApiErrors(error);
         });
     },
 
-    async submit() {
-      this.isSubmitting = true;
-      let data = {
-        client: {
-          full_name: this.full_name,
-          code: this.code,
-          email: this.email,
-          rfc: this.rfc,
-          phone_number: this.phone_number,
-          birthday: this.birthday,
-          address: this.address,
-          zip_code: this.zip_code,
-          civil_status: this.civil_status,
-          state: this.state,
-          city: this.city,
-          image: this.image,
-        },
+    buildClientPayload() {
+      const payload = {
+        full_name: this.full_name,
+        code: this.code,
+        email: this.email,
+        rfc: this.rfc,
+        phone_number: this.phone_number,
+        birthday: this.birthday,
+        address: this.address,
+        zip_code: this.zip_code,
+        civil_status: this.civil_status,
+        state: this.state,
+        city: this.city,
+        image: this.image,
       };
-      if (this.isEdit) {
-        data.client.id = this.id;
-        this.updateClient(data)
-          .then(() => {
-            this.$notify({
-              title: "Success",
-              type: "success",
-              message: "Cliente actualizado con éxito",
-              icon: "tim-icons icon-bell-55",
-            });
-            return true;
-          })
-          .catch((error) => {
-            console.log(error);
-            this.isSubmitting = false;
-            this.$notify({
-              title: "Error",
-              type: "danger",
-              message: "Error al actualizar el Cliente",
-              icon: "tim-icons icon-bell-55",
-            });
-          });
+      if (this.canManageDocuments) {
+        Object.assign(payload, this.verificationStatuses);
+      }
+      return payload;
+    },
+
+    filesToUpload() {
+      const files = {};
+      Object.entries(this.documentFiles).forEach(([param, file]) => {
+        if (file) {
+          files[param] = file;
+        }
+      });
+      return files;
+    },
+
+    onDocumentFileSelected({ param, file }) {
+      this.$set(this.documentFiles, param, file);
+    },
+
+    onDocumentFieldError({ param, message }) {
+      if (message) {
+        this.$set(this.documentFieldErrors, param, message);
       } else {
-        this.createClient(data)
-          .then(() => {
-            this.$notify({
-              title: "Success",
-              type: "success",
-              message: "El Cliente fue creado con éxito",
-              icon: "tim-icons icon-bell-55",
-            });
-            return true;
-          })
-          .catch((error) => {
-            console.log(error);
-            this.isSubmitting = false;
-            this.resetData();
-            this.$notify({
-              title: "Error",
-              type: "danger",
-              message: "Error al crear el cliente",
-              icon: "tim-icons icon-bell-55",
-            });
-            return false;
+        this.$delete(this.documentFieldErrors, param);
+      }
+    },
+
+    onVerificationChange({ field, value }) {
+      this.$set(this.verificationStatuses, field, value);
+    },
+
+    validateDocumentsBeforeSubmit() {
+      this.formErrors = [];
+      this.documentFieldErrors = {};
+
+      if (!this.canManageDocuments) {
+        return true;
+      }
+
+      const files = this.filesToUpload();
+      const requireAll = !this.isEdit;
+      const errors = validateClientDocuments(files, { requireAll });
+
+      if (requireAll) {
+        this.formErrors = errors;
+        return errors.length === 0;
+      }
+
+      if (errors.length) {
+        this.formErrors = errors;
+        return false;
+      }
+      return true;
+    },
+
+    handleSubmitError(error) {
+      this.isSubmitting = false;
+      if (error.response?.status === 403) {
+        this.formErrors = ["No estás autorizado para realizar esta acción."];
+        return;
+      }
+      this.formErrors = extractApiErrors(error);
+      this.$notify({
+        title: "Error",
+        type: "danger",
+        message: this.formErrors[0] || "No se pudo guardar el cliente",
+        icon: "tim-icons icon-bell-55",
+      });
+    },
+
+    async submit() {
+      if (!this.validateDocumentsBeforeSubmit()) {
+        return;
+      }
+
+      this.isSubmitting = true;
+      this.formErrors = [];
+
+      const payload = {
+        client: this.buildClientPayload(),
+        files: this.filesToUpload(),
+        requireDocuments: !this.isEdit && this.canManageDocuments,
+      };
+
+      try {
+        if (this.isEdit) {
+          await this.updateClient({ id: this.id, ...payload });
+          this.$notify({
+            title: "Éxito",
+            type: "success",
+            message: "Cliente actualizado con éxito",
+            icon: "tim-icons icon-bell-55",
           });
+        } else {
+          await this.createClient(payload);
+          this.$notify({
+            title: "Éxito",
+            type: "success",
+            message: "El cliente fue creado con éxito",
+            icon: "tim-icons icon-bell-55",
+          });
+        }
+      } catch (error) {
+        this.handleSubmitError(error);
       }
     },
     onImageChange(file) {
@@ -428,6 +516,11 @@ export default {
       this.state = "Chihuahua";
       this.city = "Cuauhtemoc";
       this.image = "";
+      this.documents = emptyDocumentsPayload();
+      this.documentFiles = {};
+      this.documentFieldErrors = {};
+      this.verificationStatuses = {};
+      this.formErrors = [];
     },
   },
   created() {

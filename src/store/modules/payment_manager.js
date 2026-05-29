@@ -1,5 +1,7 @@
 import axios from "axios";
 import router from "@/router/router";
+import paymentsService from "@/services/paymentsService";
+import { formatPaymentFromApi } from "@/util/paymentApi";
 
 const BASE_URL = process.env.VUE_APP_BACKEND_URL;
 const state = {
@@ -38,27 +40,12 @@ const actions = {
         Authorization: localStorage.getItem("auth_token"),
       },
     };
-    axios
+    return axios
       .get(`${BASE_URL}/payments`, config)
       .then((response) => {
-        const formatedPayments = response.data.map((payment) => {
-          return {
-            id: payment.id,
-            amount: payment.amount,
-            payment_date: payment.payment_date,
-            payment_type: payment.payment_type,
-            comments: payment.comments,
-            image_url: payment.image_url,
-            status: payment.status,
-            payment_status_name: payment.payment_status_name,
-            contract: payment.contract,
-            land_code: payment.land_code,
-            land_address: payment.land_address,
-            client_name: payment.client_name,
-            residential_name: payment.residential_name,
-            contract_id: payment.contract_id,
-          };
-        });
+        const formatedPayments = response.data.map((payment) =>
+          formatPaymentFromApi(payment)
+        );
         commit("setPayments", formatedPayments);
       })
       .catch((error) => {
@@ -75,23 +62,8 @@ const actions = {
       axios
         .get(`${BASE_URL}/payments/${payment_id}`, config)
         .then((response) => {
-          const payment = response.data;
-          commit("setPayment", {
-            id: payment.id,
-            amount: payment.amount,
-            payment_date: payment.payment_date,
-            payment_type: payment.payment_type,
-            comments: payment.comments,
-            image_url: payment.image_url,
-            status: payment.status,
-            payment_status_name: payment.payment_status_name,
-            contract: payment.contract,
-            land_code: payment.land_code,
-            land_address: payment.land_address,
-            client_name: payment.client_name,
-            residential_name: payment.residential_name,
-            contract_id: payment.contract_id,
-          });
+          const payment = formatPaymentFromApi(response.data);
+          commit("setPayment", payment);
           resolve(payment);
         })
         .catch((error) => {
@@ -152,21 +124,46 @@ const actions = {
   },
   updatePayment({ commit }, payload) {
     return new Promise((resolve, reject) => {
-      const config = {
-        headers: {
-          Authorization: localStorage.getItem("auth_token"),
-        },
-      };
-      axios
-        .put(`${BASE_URL}/payments/${payload.payment.id}`, payload, config)
+      const paymentId = payload.id || payload.payment?.id;
+      const normalizedId = paymentId != null ? String(paymentId).trim() : "";
+      if (!normalizedId || normalizedId === "undefined" || normalizedId === "null") {
+        return reject(new Error("Payment id is required"));
+      }
+
+      const paymentBody = payload.payment || payload;
+      const usePatch = payload.usePatch === true;
+
+      const request = usePatch
+        ? paymentsService.patch(normalizedId, paymentBody)
+        : axios.put(
+            `${BASE_URL}/payments/${normalizedId}`,
+            payload,
+            {
+              headers: {
+                Authorization: localStorage.getItem("auth_token"),
+              },
+            }
+          );
+
+      request
         .then((response) => {
-          commit("setPaymentUpdate", response.data);
-          resolve(response.data);
+          const formatted = formatPaymentFromApi(response.data) || response.data;
+          commit("setPaymentUpdate", formatted);
+          commit("setPayment", formatted);
+          resolve(formatted);
         })
         .catch((error) => {
           console.error(error);
           reject(error);
         });
+    });
+  },
+  patchPayment({ commit }, { id, payment }) {
+    return paymentsService.patch(id, payment).then((response) => {
+      const formatted = formatPaymentFromApi(response.data);
+      commit("setPaymentUpdate", formatted);
+      commit("setPayment", formatted);
+      return formatted;
     });
   },
   deletePayement({ commit }, id) {

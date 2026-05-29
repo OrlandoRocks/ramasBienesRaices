@@ -126,7 +126,8 @@ export default {
       this.showMenu = false;
     },
     setPageClass() {
-      this.pageClass = `${this.$route.name}-page`.toLowerCase();
+      const routeName = (this.$route.name || "login").toLowerCase();
+      this.pageClass = `${routeName}-page`;
     },
   },
   beforeDestroy() {

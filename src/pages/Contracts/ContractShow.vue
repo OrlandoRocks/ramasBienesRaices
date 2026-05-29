@@ -136,145 +136,24 @@
       </card>
     </div>
     <div class="col-md-12">
-      <card class="text-center">
-        <div class="places-buttons">
-          <div class="row">
-            <div class="col-md-6 ml-auto mr-auto text-center">
-              <h4 class="card-title">Pagos:</h4>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-lg-8 ml-auto mr-auto">
-              <div class="row">
-                <el-table class="table-container" :data="paymentData">
-                  <el-table-column
-                    v-for="column in tableColumns"
-                    :key="column.label"
-                    :min-width="column.minWidth"
-                    :prop="column.prop"
-                    :label="column.label"
-                    :formatter="
-                      typeof column.formatter === 'function'
-                        ? column.formatter
-                        : null
-                    "
-                  >
-                    <template
-                      #default="{ row }"
-                      v-if="typeof column.formatter !== 'function'"
-                    >
-                      <div
-                        v-if="column.formatter"
-                        :is="column.formatter"
-                        :row="row"
-                        :column="column"
-                      ></div>
-                      <template v-else>
-                        {{ row[column.prop] }}
-                      </template>
-                    </template>
-                  </el-table-column>
-                  <el-table-column
-                    :min-width="100"
-                    align="right"
-                    label="Capturar PAGOS"
-                  >
-                    <div slot-scope="props">
-                      <base-button
-                        @click.native="handlePayment()"
-                        class="edit btn-link"
-                        type="warning"
-                        size="sm"
-                        icon
-                      >
-                        <i class="tim-icons icon-money-coins"></i>
-                      </base-button>
-                    </div>
-                  </el-table-column>
-                </el-table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </card>
+      <contract-payments-panel
+        v-if="contractId"
+        :contract-id="contractId"
+        :payment-return-query="paymentReturnQuery"
+      />
     </div>
   </div>
 </template>
 <script>
-import { Table, TableColumn } from "element-ui";
 import { mapGetters, mapActions } from "vuex";
+import ContractPaymentsPanel from "@/components/Contracts/ContractPaymentsPanel.vue";
 
 export default {
   components: {
-    ElTable: Table,
-    ElTableColumn: TableColumn,
-  },
-  data() {
-    return {
-      type: ["", "info", "success", "warning", "danger"],
-      notifications: {
-        topCenter: false,
-      },
-      tableColumns: [
-        {
-          prop: "total",
-          label: "Total a Pagar",
-          minWidth: 150,
-          formatter: (row) => {
-            return `${this.formatCurrency(row.total)}`;
-          },
-        },
-        {
-          prop: "amount",
-          label: "Pago",
-          minWidth: 100,
-          formatter: (row) => {
-            return `${this.formatCurrency(row.amount)}`;
-          },
-        },
-        {
-          prop: "row_number",
-          label: "Numero de pago",
-          minWidth: 100,
-        },
-        {
-          prop: "payment_date",
-          label: "Fecha de Pago",
-          minWidth: 150,
-        },
-        {
-          prop: "payment_status_name",
-          label: "Estatus",
-          minWidth: 150,
-          formatter: (row) => {
-            return (
-              <p
-                class={
-                  row.payment_status_name === "Pagado"
-                    ? "text-success"
-                    : "text-warning"
-                }
-              >
-                {row.payment_status_name}
-              </p>
-            );
-          },
-        },
-      ],
-      modals: {
-        classic: false,
-        notice: false,
-        mini: false,
-      },
-    };
+    ContractPaymentsPanel,
   },
   computed: {
-    ...mapGetters([
-      "getLandById",
-      "getClientById",
-      "getContractById",
-      "getContractPayments",
-    ]),
+    ...mapGetters(["getLandById", "getClientById", "getContractById"]),
 
     contractInfo() {
       return this.getContractById;
@@ -285,35 +164,31 @@ export default {
     clientInfo() {
       return this.getClientById;
     },
-    paymentData() {
-      return this.getContractPayments;
+    contractId() {
+      return this.$route.params.id;
+    },
+    paymentReturnQuery() {
+      return {
+        returnTo: "contract",
+        contractId: String(this.contractId),
+      };
     },
   },
   methods: {
-    ...mapActions([
-      "fetchContractById",
-      "fetchLandById",
-      "fetchClientById",
-      "fetchPaymentsByContractId",
-    ]),
+    ...mapActions(["fetchContractById", "fetchLandById", "fetchClientById"]),
 
     loadContractData(contract_id) {
       this.fetchContractById(contract_id).then((res) => {
-        this.fetchLandById(res.land_id);
-        this.fetchClientById(res.client_id);
-      });
-    },
-
-    handlePayment() {
-      const pendingRow = this.paymentData.find(
-        (row) => row.payment_status_name == "Pendiente"
-      );
-      console.log(pendingRow);
-      this.$router.push({
-        name: "EditPayment",
-        params: {
-          id: pendingRow.id,
-        },
+        const user = this.$store.getters.currentUser;
+        if (user?.isClient) {
+          return;
+        }
+        if (!res?.land && res?.land_id) {
+          this.fetchLandById(res.land_id).catch(() => {});
+        }
+        if (!res?.client && res?.client_id) {
+          this.fetchClientById(res.client_id).catch(() => {});
+        }
       });
     },
   },

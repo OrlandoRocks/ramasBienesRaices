@@ -8,6 +8,12 @@ import store from "./store";
 import i18n from "./i18n";
 import "./registerServiceWorker";
 import currencyMixin from "./util/currency_mixin";
+import { getAuthToken, isAuthTokenValid, clearAuthToken } from "@/util/auth";
+import { setupAxios, setForbiddenNotifyHandler } from "@/util/setupAxios";
+import PermissionsPlugin from "@/plugins/permissions";
+
+setupAxios();
+Vue.use(PermissionsPlugin);
 
 Vue.mixin(currencyMixin);
 
@@ -17,7 +23,7 @@ Vue.use(DashboardPlugin);
 Vue.use(VueRouter);
 Vue.use(RouterPrefetch);
 
-new Vue({
+const app = new Vue({
   el: "#app",
   render: (h) => h(App),
   router,
@@ -25,34 +31,21 @@ new Vue({
   store,
 });
 
-let localAuthToken = localStorage.getItem("auth_token");
-if (localAuthToken && localAuthToken !== "undefined") {
-  const payload = localAuthToken.split(".")[1];
-  let exp = null;
+setForbiddenNotifyHandler((message) => {
+  app.$notify({
+    title: "Sin permiso",
+    type: "warning",
+    message,
+    icon: "tim-icons icon-lock-circle",
+  });
+});
 
-  if (payload) {
-    try {
-      const decoded = JSON.parse(atob(payload));
-      exp = decoded.exp;
-    } catch (error) {
-      console.error("Error decodificando el token:", error);
-    }
-  }
+store.commit("restoreUserFromStorage");
 
-  if (exp) {
-    const now = Math.floor(Date.now() / 1000);
-    if (now > exp) {
-      console.log("El token ha expirado.");
-      localStorage.removeItem("auth_token");
-    } else {
-      console.log("El token es válido.");
-      store.dispatch("loginUserWithToken", { auth_token: localAuthToken });
-    }
-  } else {
-    console.log("No se pudo obtener la fecha de expiración del token.");
-  }
-} else {
-  console.log("No hay token en localStorage.");
+const localAuthToken = getAuthToken();
+if (localAuthToken && !isAuthTokenValid(localAuthToken)) {
+  clearAuthToken();
+  store.commit("resetUserInfo");
 }
 
 

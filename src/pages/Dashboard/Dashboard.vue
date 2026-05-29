@@ -1,65 +1,46 @@
 <template>
   <div class="row">
-    <!-- Small charts -->
-    <div class="col-lg-4" :class="{ 'text-right': isRTL }">
-      <card type="chart">
+    <!-- Residential Map Section -->
+    <div class="col-12">
+      <card>
         <template slot="header">
-          <h5 class="card-category">Total Contratos</h5>
-          <h3 class="card-title">
-            <i class="tim-icons icon-bell-55 text-primary"></i> 763,215
-          </h3>
+          <div class="d-flex justify-content-between align-items-center">
+            <h4 class="card-title">Mapa de Residenciales</h4>
+            <div class="residential-selector">
+              <el-select
+                v-model="selectedResidentialId"
+                placeholder="Seleccionar Residencial"
+                class="select-primary"
+                style="width: 100%"
+                size="large"
+                filterable
+              >
+                <el-option
+                  v-for="residential in getResidentials"
+                  :key="residential.id"
+                  :label="residential.name"
+                  :value="residential.id"
+                >
+                </el-option>
+              </el-select>
+            </div>
+          </div>
         </template>
-        <div class="chart-area">
-          <line-chart
-            style="height: 100%"
-            :chart-data="purpleLineChart.chartData"
-            :gradient-colors="purpleLineChart.gradientColors"
-            :gradient-stops="purpleLineChart.gradientStops"
-            :extra-options="purpleLineChart.extraOptions"
-          >
-          </line-chart>
+        <div class="map-container-wrapper">
+          <map-libre-view
+            v-if="selectedResidentialId"
+            ref="dashboardMap"
+            :residential-id="selectedResidentialId"
+            :key="selectedResidentialId"
+            :interactive="false"
+          ></map-libre-view>
+          <div v-else class="map-placeholder">
+            <i class="tim-icons icon-map-big"></i>
+            <p>Selecciona un residencial para ver el mapa</p>
+          </div>
         </div>
       </card>
     </div>
-    <div class="col-lg-4" :class="{ 'text-right': isRTL }">
-      <card type="chart">
-        <template slot="header">
-          <h5 class="card-category">Total de Ventas</h5>
-          <h3 class="card-title">
-            <i class="tim-icons icon-delivery-fast text-info"></i> 3,500,000$
-          </h3>
-        </template>
-        <div class="chart-area">
-          <bar-chart
-            style="height: 100%"
-            :chart-data="blueBarChart.chartData"
-            :gradient-stops="blueBarChart.gradientStops"
-            :extra-options="blueBarChart.extraOptions"
-          >
-          </bar-chart>
-        </div>
-      </card>
-    </div>
-    <div class="col-lg-4" :class="{ 'text-right': isRTL }">
-      <card type="chart">
-        <template slot="header">
-          <h5 class="card-category">Total de Clientes</h5>
-          <h3 class="card-title">
-            <i class="tim-icons icon-send text-success"></i> 1,100K
-          </h3>
-        </template>
-        <div class="chart-area">
-          <line-chart
-            style="height: 100%"
-            :chart-data="greenLineChart.chartData"
-            :gradient-stops="greenLineChart.gradientStops"
-            :extra-options="greenLineChart.extraOptions"
-          >
-          </line-chart>
-        </div>
-      </card>
-    </div>
-
 
     <!-- Stats Cards -->
     <div class="col-lg-3 col-md-6" v-for="card in statsCards" :key="card.title">
@@ -76,28 +57,36 @@
     <div class="col-lg-12">
       <card class="card" :header-classes="{ 'text-right': isRTL }">
         <h5 slot="header" class="card-title">Tabla de control</h5>
-        <div class="table-responsive"><user-table></user-table></div>
+        <div class="table-responsive">
+          <pending-payments-control-table
+            :residential-id="selectedResidentialId"
+          />
+        </div>
       </card>
     </div>
   </div>
 </template>
 <script>
-import LineChart from "@/components/Charts/LineChart";
-import BarChart from "@/components/Charts/BarChart";
-import * as chartConfigs from "@/components/Charts/config";
-import UserTable from "./UserTable";
+import { mapActions, mapGetters } from "vuex";
+import { Select, Option } from "element-ui";
+import PendingPaymentsControlTable from "./PendingPaymentsControlTable";
 import StatsCard from "src/components/Cards/StatsCard";
-import config from "@/config";
+import MapLibreView from "@/components/Maps/MapLibreView";
+
+const DASHBOARD_RESIDENTIAL_STORAGE_KEY = "dashboard_selected_residential_id";
 
 export default {
   components: {
-    LineChart,
-    BarChart,
     StatsCard,
-    UserTable,
+    PendingPaymentsControlTable,
+    MapLibreView,
+    [Select.name]: Select,
+    [Option.name]: Option,
   },
   data() {
     return {
+      selectedResidentialId: null,
+      hasRestoredResidentialSelection: false,
       statsCards: [
         {
           title: "150,000$",
@@ -111,8 +100,7 @@ export default {
           subTitle: "Terrenos Vendidos",
           type: "primary",
           icon: "tim-icons icon-world",
-          footer:
-            '<i class="tim-icons icon-pencil" @click.native="console.log()" ></i></i> Lista de Terrenos',
+          footer: '<i class="tim-icons icon-pencil"></i> Lista de Terrenos',
         },
         {
           title: "150,000",
@@ -129,121 +117,72 @@ export default {
           footer: '<i class="tim-icons icon-pencil"></i> Ver Deudas',
         },
       ],
-      purpleLineChart: {
-        extraOptions: chartConfigs.purpleChartOptions,
-        chartData: {
-          labels: ["JUL", "AUG", "SEP", "OCT", "NOV", "DEC"],
-          datasets: [
-            {
-              label: "Data",
-              fill: true,
-              borderColor: config.colors.primary,
-              borderWidth: 2,
-              borderDash: [],
-              borderDashOffset: 0.0,
-              pointBackgroundColor: config.colors.primary,
-              pointBorderColor: "rgba(255,255,255,0)",
-              pointHoverBackgroundColor: config.colors.primary,
-              pointBorderWidth: 20,
-              pointHoverRadius: 4,
-              pointHoverBorderWidth: 15,
-              pointRadius: 4,
-              data: [8, 10, 7, 8, 12, 8],
-            },
-          ],
-        },
-        gradientColors: config.colors.primaryGradient,
-        gradientStops: [1, 0.2, 0],
-      },
-      greenLineChart: {
-        extraOptions: chartConfigs.greenChartOptions,
-        chartData: {
-          labels: ["JUL", "AUG", "SEP", "OCT", "NOV"],
-          datasets: [
-            {
-              label: "My First dataset",
-              fill: true,
-              borderColor: config.colors.danger,
-              borderWidth: 2,
-              borderDash: [],
-              borderDashOffset: 0.0,
-              pointBackgroundColor: config.colors.danger,
-              pointBorderColor: "rgba(255,255,255,0)",
-              pointHoverBackgroundColor: config.colors.danger,
-              pointBorderWidth: 20,
-              pointHoverRadius: 4,
-              pointHoverBorderWidth: 15,
-              pointRadius: 4,
-              data: [90, 27, 60, 12, 80],
-            },
-          ],
-        },
-        gradientColors: [
-          "rgba(66,134,121,0.15)",
-          "rgba(66,134,121,0.0)",
-          "rgba(66,134,121,0)",
-        ],
-        gradientStops: [1, 0.4, 0],
-      },
-      blueBarChart: {
-        extraOptions: chartConfigs.barChartOptions,
-        chartData: {
-          labels: ["USA", "GER", "AUS", "UK", "RO", "BR"],
-          datasets: [
-            {
-              label: "Countries",
-              fill: true,
-              borderColor: config.colors.info,
-              borderWidth: 2,
-              borderDash: [],
-              borderDashOffset: 0.0,
-              data: [53, 20, 10, 80, 100, 45],
-            },
-          ],
-        },
-        gradientColors: config.colors.primaryGradient,
-        gradientStops: [1, 0.4, 0],
-      },
     };
   },
   computed: {
+    ...mapGetters(["getResidentials"]),
     enableRTL() {
       return this.$route.query.enableRTL;
     },
     isRTL() {
       return this.$rtl.isRTL;
     },
-    bigLineChartCategories() {
-      return [
-        { name: "Pagados", icon: "tim-icons icon-single-02" },
-        { name: "Pendientes", icon: "tim-icons icon-gift-2" },
-        { name: "Todos", icon: "tim-icons icon-tap-02" },
-      ];
+  },
+  watch: {
+    getResidentials(residentials) {
+      if (this.hasRestoredResidentialSelection || !residentials.length) {
+        return;
+      }
+      this.restoreSelectedResidential();
+      this.hasRestoredResidentialSelection = true;
+    },
+    selectedResidentialId(id) {
+      if (id === null || id === undefined || id === "") {
+        localStorage.removeItem(DASHBOARD_RESIDENTIAL_STORAGE_KEY);
+        return;
+      }
+      localStorage.setItem(DASHBOARD_RESIDENTIAL_STORAGE_KEY, String(id));
     },
   },
   methods: {
-    initBigChart(index) {
-      let chartData = {
-        datasets: [
-          {
-            ...bigChartDatasetOptions,
-            data: bigChartData[index],
-          },
-        ],
-        labels: bigChartLabels,
-      };
-      this.$refs.bigChart.updateGradients(chartData);
-      this.bigLineChart.chartData = chartData;
-      this.bigLineChart.activeIndex = index;
+    ...mapActions(["fetchResidentials", "fetchLands"]),
+    refreshDashboardMap() {
+      this.fetchLands().finally(() => {
+        if (this.$refs.dashboardMap) {
+          this.$refs.dashboardMap.refreshMapTiles();
+        } else {
+          this.$root.$emit("refresh-map-tiles");
+        }
+      });
+    },
+    restoreSelectedResidential() {
+      const savedId = localStorage.getItem(DASHBOARD_RESIDENTIAL_STORAGE_KEY);
+      if (!savedId) {
+        return;
+      }
+
+      const residential = this.getResidentials.find(
+        (item) => String(item.id) === String(savedId)
+      );
+
+      if (residential) {
+        this.selectedResidentialId = residential.id;
+      } else {
+        localStorage.removeItem(DASHBOARD_RESIDENTIAL_STORAGE_KEY);
+      }
     },
   },
   mounted() {
+    this.fetchResidentials();
+    this.refreshDashboardMap();
     this.i18n = this.$i18n;
     if (this.enableRTL) {
       this.i18n.locale = "ar";
       this.$rtl.enableRTL();
     }
-    this.initBigChart(0);
+  },
+  activated() {
+    this.refreshDashboardMap();
   },
   beforeDestroy() {
     if (this.$rtl.isRTL) {
@@ -253,4 +192,45 @@ export default {
   },
 };
 </script>
-<style></style>
+<style scoped>
+.map-container-wrapper {
+  height: 450px;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  border-radius: 8px;
+}
+
+.map-placeholder {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.map-placeholder i {
+  font-size: 48px;
+  color: #9a9a9a;
+  margin-bottom: 15px;
+}
+
+.map-placeholder p {
+  color: #9a9a9a;
+  font-size: 16px;
+}
+
+.residential-selector {
+  min-width: 250px;
+}
+</style>
+<style>
+.map-container-wrapper .map-container {
+  height: 100% !important;
+}
+.map-container-wrapper .map-libre {
+  height: 100% !important;
+}
+</style>

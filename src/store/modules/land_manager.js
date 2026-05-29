@@ -16,6 +16,8 @@ const state = {
     residential_id: "",
     residential_name: "",
     client_name: "",
+    client_id: null,
+    contract_id: null,
   },
 };
 
@@ -35,7 +37,7 @@ const actions = {
         Authorization: localStorage.getItem("auth_token"),
       },
     };
-    axios
+    return axios
       .get(`${BASE_URL}/lands`, config)
       .then((response) => {
         const formatedLands = response.data.map((land) => {
@@ -47,6 +49,7 @@ const actions = {
             size: land.size,
             price: land.price,
             contract_id: land.contract_id,
+            client_id: land.client_id,
             house_number: land.house_number,
             residential_id: land.residential_id,
             residential_name: land.residential_name,
@@ -54,9 +57,11 @@ const actions = {
           };
         });
         commit("setLands", formatedLands);
+        return formatedLands;
       })
       .catch((error) => {
         console.error(error);
+        throw error;
       });
   },
   fetchLandById({ commit }, id) {
@@ -80,6 +85,8 @@ const actions = {
             residential_id: response.data.residential_id,
             residential_name: response.data.residential_name,
             client_name: response.data.client_name,
+            client_id: response.data.client_id,
+            contract_id: response.data.contract_id,
           };
           commit("setLand", land);
           resolve(land);

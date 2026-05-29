@@ -25,7 +25,11 @@
                 >
                 </el-option>
               </el-select>
-              <base-button @click="goToCreateResidential" type="info">
+              <base-button
+                v-if="$can('residentials.create')"
+                @click="goToCreateResidential"
+                type="info"
+              >
                 <i class="tim-icons icon-simple-add"> </i> Crear Nuevo
               </base-button>
               <base-input>
@@ -72,15 +76,17 @@
               <el-table-column :min-width="135" align="right" label="Actions">
                 <div slot-scope="props">
                   <base-button
-                    @click.native="handleLike(props.$index, props.row)"
-                    class="like btn-link"
-                    type="info"
+                    @click.native="goToDashboard(props.row)"
+                    v-if="$can('residentials.show')"
+                    class="btn-link"
+                    type="success"
                     size="sm"
                     icon
                   >
-                    <i class="tim-icons icon-heart-2"></i>
+                    <i class="tim-icons icon-chart-bar-32"></i>
                   </base-button>
                   <base-button
+                    v-if="$can('residentials.update')"
                     @click.native="handleEdit(props.$index, props.row)"
                     class="edit btn-link"
                     type="warning"
@@ -90,6 +96,7 @@
                     <i class="tim-icons icon-pencil"></i>
                   </base-button>
                   <base-button
+                    v-if="$can('residentials.destroy')"
                     @click.native="handleDelete(props.$index, props.row)"
                     class="remove btn-link"
                     type="danger"
@@ -234,6 +241,12 @@ export default {
     },
     handleEdit(index, row) {
       this.$router.push({ name: "EditResidential", params: { id: row.id } });
+    },
+    goToDashboard(row) {
+      this.$router.push({
+        name: "ResidentialDashboard",
+        params: { id: row.id },
+      });
     },
     handleDelete(index, row) {
       swal

@@ -198,13 +198,12 @@ export default {
           payment,
           curr_payment,
           pay_number,
-          payment_date: payment_date.toLocaleDateString("es-ES"),
+          payment_date: this.formatPaymentDate(payment_date),
           client: this.clientFullName,
           client_id: this.getClientById.id,
           status: "Pendiente",
         });
       }
-      this.$store.commit("setPayments", this.paymentData);
       this.$store.commit("setContract", {
         land_id: this.landInfo.id,
         client_id: this.getClientById.id,
@@ -212,6 +211,7 @@ export default {
         monthly_payment: parced_pay_month,
         months: parced_months,
         start_date: parced_start_date,
+        payments: this.paymentData,
       });
     },
     notifyPaymentList() {
@@ -224,6 +224,12 @@ export default {
         verticalAlign: "top",
         type: "danger",
       });
+    },
+    formatPaymentDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
     },
   },
 };

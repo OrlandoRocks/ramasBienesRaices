@@ -95,11 +95,11 @@
                     v-model="user_id"
                   >
                     <el-option
-                      v-for="option in usersList"
+                      v-for="option in responsableOptions"
                       class="select-primary"
                       :value="option.id"
-                      :label="`${option.full_name} (${option.email})`"
-                      :key="option.email"
+                      :label="optionLabel(option)"
+                      :key="String(option.id)"
                     >
                     </el-option>
                   </el-select>
@@ -140,9 +140,44 @@ export default {
     [Option.name]: Option,
   },
   computed: {
-    ...mapGetters(["getUsersList", "getResidentialById"]),
-    usersList() {
-      return this.getUsersList;
+    ...mapGetters([
+      "getUsersForSelect",
+      "getResidentialById",
+      "getResidentials",
+      "isStaff",
+      "currentUser",
+    ]),
+    responsableOptions() {
+      if (this.getUsersForSelect?.length) {
+        return this.getUsersForSelect;
+      }
+      if (!this.isStaff) {
+        return [];
+      }
+      const seen = new Set();
+      const options = (this.getResidentials || []).reduce((list, residential) => {
+        const id = residential.user_id;
+        if (!id || seen.has(String(id))) {
+          return list;
+        }
+        seen.add(String(id));
+        list.push({
+          id,
+          full_name: residential.user_name || `Usuario #${id}`,
+          email: "",
+        });
+        return list;
+      }, []);
+      const currentId = this.user_id || this.getResidentialById?.user_id;
+      if (currentId && !seen.has(String(currentId))) {
+        options.unshift({
+          id: currentId,
+          full_name:
+            this.getResidentialById?.user_name || `Usuario #${currentId}`,
+          email: "",
+        });
+      }
+      return options;
     },
   },
   data() {
@@ -238,6 +273,12 @@ export default {
     goToResidentials() {
       this.$router.push({ name: "Residentials" });
     },
+    optionLabel(option) {
+      if (option.email) {
+        return `${option.full_name} (${option.email})`;
+      }
+      return option.full_name;
+    },
     resetData() {
       this.name = "";
       this.address = "";
@@ -246,7 +287,11 @@ export default {
     },
   },
   mounted() {
-    this.$store.dispatch("usersList");
+    if (this.$can("users.index")) {
+      this.$store.dispatch("fetchUsersForSelect");
+    } else if (this.isStaff) {
+      this.$store.dispatch("fetchResidentials");
+    }
   },
   created() {
     const residentialId = this.$route.params.id;

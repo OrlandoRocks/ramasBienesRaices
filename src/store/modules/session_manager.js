@@ -1,32 +1,35 @@
 import axios from "axios";
 import router from "@/router/router";
+import {
+  parseUserFromApiResponse,
+  emptyUser,
+  getDefaultRouteForUser,
+  normalizeUser,
+} from "@/util/userSession";
+import { can } from "@/util/permissions";
 
-//const BASE_URL = "http://localhost:3000/";
 const BASE_URL = process.env.VUE_APP_BACKEND_URL;
 
 const state = {
   auth_token: null,
   errors: null,
-  user: {
-    id: null,
-    name: null,
-    last_name: null,
-    email: null,
-  },
-  users: [],
+  user: emptyUser(),
 };
+
 const getters = {
   getAuthToken(state) {
     return state.auth_token;
+  },
+  currentUser(state) {
+    return normalizeUser(state.user);
   },
   getUserEmail(state) {
     return state.user?.email;
   },
   getUserName(state) {
-    return state.user?.name + " " + state.user?.last_name;
-  },
-  getUsersList(state) {
-    return state.users;
+    const name = state.user?.name || "";
+    const last = state.user?.lastName || "";
+    return `${name} ${last}`.trim();
   },
   getUserID(state) {
     return state.user?.id;
@@ -35,11 +38,19 @@ const getters = {
     return state.errors;
   },
   isLoggedIn(state) {
-    const loggedOut =
-      state.auth_token == null || state.auth_token == JSON.stringify(null);
-    return !loggedOut;
+    return Boolean(state.auth_token);
   },
+  roleName: (state) => state.user?.roleName,
+  roleId: (state) => state.user?.roleId,
+  clientId: (state) => state.user?.clientId,
+  isSuperUser: (state) => state.user?.isSuperUser,
+  isAdmin: (state) => state.user?.isAdmin,
+  isStaff: (state) => state.user?.isStaff,
+  isSeller: (state) => state.user?.isSeller,
+  isClient: (state) => state.user?.isClient,
+  can: (state) => (permission) => can(state.user, permission),
 };
+
 const actions = {
   registerUser({ commit }, payload) {
     return new Promise((resolve, reject) => {
@@ -47,7 +58,6 @@ const actions = {
         .post(`${BASE_URL}/signup`, payload)
         .then((response) => {
           commit("setUserInfo", response);
-          router.push("/dashboard");
           resolve(response);
         })
         .catch((error) => {
@@ -83,9 +93,9 @@ const actions = {
           commit("resetUserInfo");
           resolve();
         })
-        .catch((error) => {
-          commit("setError", error);
-          reject(error);
+        .catch(() => {
+          commit("resetUserInfo");
+          resolve();
         });
     });
   },
@@ -103,77 +113,60 @@ const actions = {
           resolve(response);
         })
         .catch((error) => {
-          commit("setError", error);
-          reject(error);
-        });
-    });
-  },
-  usersList({ commit }) {
-    const config = {
-      headers: {
-        Authorization: state.auth_token,
-      },
-    };
-    return new Promise((resolve, reject) => {
-      axios
-        .get(`${BASE_URL}/users`, config)
-        .then((response) => {
-          const formattedUsers = response.data.data.map((user) => {
-            const name = user.attributes.name || "Sin nombre";
-            const lastName = user.attributes["last-name"] || "Sin apellido";
-
-            const fullName = `${name} ${lastName}`.trim();
-
-            return {
-              id: user.id,
-              name: name,
-              last_name: lastName,
-              full_name: fullName,
-              email: user.attributes.email || "No email",
-            };
-          });
-          commit("setUsers", formattedUsers);
-          resolve(response);
-        })
-        .catch((error) => {
-          commit("setError", error);
+          if (error.response?.status === 401) {
+            commit("resetUserInfo");
+          } else {
+            commit("setError", error);
+          }
           reject(error);
         });
     });
   },
 };
+
 const mutations = {
   setUserInfo(state, data) {
-    state.user = data.data.data.attributes;
-    state.user.last_name = data.data.data.attributes["last-name"];
-    state.auth_token = data.data.meta.token;
-    axios.defaults.headers.common["Authorization"] = state.auth_token;
-    localStorage.setItem("auth_token", state.auth_token);
+    const token = data.data.meta.token;
+    state.user = parseUserFromApiResponse(data.data);
+    state.auth_token = token;
+    axios.defaults.headers.common.Authorization = token;
+    localStorage.setItem("auth_token", token);
+    localStorage.setItem("auth_user", JSON.stringify(state.user));
   },
   setError(state, error) {
     state.errors = error;
   },
   setUserInfoFromToken(state, data) {
-    state.user = data.data.data.attributes;
-    state.user.last_name = data.data.data.attributes["last-name"];
+    state.user = parseUserFromApiResponse(data.data);
     state.auth_token = localStorage.getItem("auth_token");
-  },
-  setUsers(state, data) {
-    state.users = data;
+    localStorage.setItem("auth_user", JSON.stringify(state.user));
   },
   resetUserInfo(state) {
-    state.user = {
-      id: null,
-      name: null,
-      last_name: null,
-      email: null,
-    };
+    state.user = emptyUser();
     state.auth_token = null;
     localStorage.removeItem("auth_token");
-    axios.defaults.headers.common["Authorization"] = null;
-    router.push({ name: "Login" });
+    localStorage.removeItem("auth_user");
+    delete axios.defaults.headers.common.Authorization;
+    const routeName = router.currentRoute?.name;
+    if (routeName !== "Login" && routeName !== "Register") {
+      router.push({ name: "Login" }).catch(() => {});
+    }
+  },
+  restoreUserFromStorage(state) {
+    const raw = localStorage.getItem("auth_user");
+    if (!raw) {
+      return;
+    }
+    try {
+      state.user = normalizeUser(JSON.parse(raw));
+    } catch {
+      state.user = emptyUser();
+    }
   },
 };
+
+export { getDefaultRouteForUser };
+
 export default {
   state,
   getters,

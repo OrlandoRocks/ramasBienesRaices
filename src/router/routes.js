@@ -54,10 +54,14 @@ const Wizard = () => import("src/pages/Forms/Wizard.vue");
 const ContractWizard = () => import("src/pages/Contracts/ContractsWizard.vue");
 
 const ResidentialForm = () => import("@/pages/Residential/ResidentialForm.vue");
+const ResidentialDashboard = () =>
+  import("@/pages/Residential/ResidentialDashboard.vue");
 const LandForm = () => import("src/pages/Land/LandForm.vue");
 const ClientForm = () => import("src/pages/Clients/ClientForm.vue");
+const ClientDetail = () => import("src/pages/Clients/ClientDetail.vue");
 const ExpenseForm = () => import("src/pages/Expense/ExpenseForm.vue");
 const PaymentForm = () => import("src/pages/Payments/PaymentForm.vue");
+const ClientPortal = () => import("src/pages/Client/ClientPortal.vue");
 
 // Maps pages
 const GoogleMaps = () =>
@@ -85,6 +89,8 @@ const ClientTable = () => import("src/pages/Clients/ClientTable.vue");
 const ExpensesTable = () => import("src/pages/Expense/ExpenseTable.vue");
 const ContractsTable = () => import("src/pages/Contracts/ContractTable.vue");
 const PaymentsTable = () => import("src/pages/Payments/PaymentTable.vue");
+const UsersList = () => import("src/pages/Admin/UsersList.vue");
+const UserForm = () => import("src/pages/Admin/UserForm.vue");
 
 
 const ContractShow = () => import("src/pages/Contracts/ContractShow.vue");
@@ -252,8 +258,27 @@ let residentialsMenu = {
       name: "EditResidential",
       components: { default: ResidentialForm },
     },
+    {
+      path: ":id/dashboard",
+      name: "ResidentialDashboard",
+      components: { default: ResidentialDashboard },
+    },
   ],
   meta: { requiresAuth: true },
+};
+
+let clientPortalMenu = {
+  path: "/portal",
+  component: DashboardLayout,
+  name: "ClientPortalHome",
+  children: [
+    {
+      path: "",
+      name: "ClientPortal",
+      components: { default: ClientPortal },
+      meta: { requiresAuth: true, permission: "contracts.index" },
+    },
+  ],
 };
 
 let contractsMenu = {
@@ -278,6 +303,7 @@ let contractsMenu = {
       components: { default: ContractShow },
     },
   ],
+  meta: { requiresAuth: true },
 };
 
 let landsMenu = {
@@ -302,6 +328,7 @@ let landsMenu = {
       components: { default: LandForm },
     },
   ],
+  meta: { requiresAuth: true },
 };
 
 let paymentsMenu = {
@@ -314,13 +341,19 @@ let paymentsMenu = {
       path: "",
       name: "Payments",
       components: { default: PaymentsTable },
+      meta: { requiresAuth: true, permission: "payments.index" },
     },
     {
       path: ":id/edit",
       name: "EditPayment",
       components: { default: PaymentForm },
+      meta: {
+        requiresAuth: true,
+        permission: ["payments.update", "payments.capture"],
+      },
     },
   ],
+  meta: { requiresAuth: true },
 };
 
 let clientsMenu = {
@@ -338,6 +371,11 @@ let clientsMenu = {
       path: "new",
       name: "CreateClient",
       components: { default: ClientForm },
+    },
+    {
+      path: ":id/show",
+      name: "ShowClient",
+      components: { default: ClientDetail },
     },
     {
       path: ":id/edit",
@@ -373,6 +411,34 @@ let expensesMenu = {
   meta: { requiresAuth: true },
 };
 
+let usersMenu = {
+  path: "/admin/users",
+  component: DashboardLayout,
+  name: "UsersHome",
+  redirect: "/admin/users",
+  children: [
+    {
+      path: "",
+      name: "Users",
+      components: { default: UsersList },
+      meta: { requiresAuth: true, permission: "users.manage" },
+    },
+    {
+      path: "new",
+      name: "CreateUser",
+      components: { default: UserForm },
+      meta: { requiresAuth: true, permission: "users.manage" },
+    },
+    {
+      path: ":id/edit",
+      name: "EditUser",
+      components: { default: UserForm },
+      meta: { requiresAuth: true, permission: "users.manage" },
+    },
+  ],
+  meta: { requiresAuth: true },
+};
+
 let balanceMenu = {
   path: "/balance",
   component: DashboardLayout,
@@ -394,22 +460,33 @@ let balanceMenu = {
 };
 
 let authPages = {
-  path: "/",
+  path: "/login",
   component: AuthLayout,
   name: "Authentication",
+  meta: { requiresAuth: false },
   children: [
     {
-      path: "/login",
+      path: "",
       name: "Login",
       component: Login,
-    },
-    {
-      path: "/register",
-      name: "Register",
-      component: Register,
+      meta: { requiresAuth: false },
     },
   ],
+};
+
+let registerPages = {
+  path: "/register",
+  component: AuthLayout,
+  name: "AuthenticationRegister",
   meta: { requiresAuth: false },
+  children: [
+    {
+      path: "",
+      name: "Register",
+      component: Register,
+      meta: { requiresAuth: false },
+    },
+  ],
 };
 
 const routes = [
@@ -426,10 +503,13 @@ const routes = [
   landsMenu,
   clientsMenu,
   expensesMenu,
+  clientPortalMenu,
   contractsMenu,
   paymentsMenu,
   balanceMenu,
+  usersMenu,
   authPages,
+  registerPages,
   {
     path: "/",
     component: DashboardLayout,

@@ -1,12 +1,12 @@
 <template>
   <div class="content">
     <div class="col-md-8 ml-auto mr-auto">
-      <h2 class="text-center">Fraccionamientos</h2>
+      <h2 class="text-center">Pagos</h2>
     </div>
     <div class="row mt-5">
       <div class="col-12">
         <card card-body-classes="table-full-width">
-          <h4 slot="header" class="card-title">Elementos por Pagina</h4>
+          <h4 slot="header" class="card-title">Listado de pagos</h4>
           <div>
             <div
               class="col-12 d-flex justify-content-center justify-content-sm-between flex-wrap"
@@ -17,88 +17,74 @@
                 placeholder="Per page"
               >
                 <el-option
-                  class="select-primary"
                   v-for="item in pagination.perPageOptions"
                   :key="item"
                   :label="item"
                   :value="item"
-                >
-                </el-option>
+                />
               </el-select>
-              <base-button @click="goToCreateResidential" type="info">
-                <i class="tim-icons icon-simple-add"> </i> Crear Nuevo
-              </base-button>
               <base-input>
                 <el-input
                   type="search"
                   class="mb-3 search-input"
                   clearable
                   prefix-icon="el-icon-search"
-                  placeholder="Buscar registros"
+                  placeholder="Buscar pagos"
                   v-model="searchQuery"
-                  aria-controls="datatables"
-                >
-                </el-input>
+                />
               </base-input>
             </div>
-            <el-table :data="queriedData">
+
+            <el-table v-loading="loading" :data="queriedData">
               <el-table-column
-                v-for="column in tableColumns"
-                :key="column.label"
-                :min-width="column.minWidth"
-                :prop="column.prop"
-                :label="column.label"
-                :formatter="
-                  typeof column.formatter === 'function'
-                    ? column.formatter
-                    : null
-                "
-              >
-                <template
-                  #default="{ row }"
-                  v-if="typeof column.formatter !== 'function'"
-                >
-                  <div
-                    v-if="column.formatter"
-                    :is="column.formatter"
-                    :row="row"
-                    :column="column"
-                  ></div>
-                  <template v-else>
-                    {{ row[column.prop] }}
-                  </template>
+                prop="client_name"
+                label="Cliente"
+                min-width="180"
+              />
+              <el-table-column
+                prop="residential_name"
+                label="Fraccionamiento"
+                min-width="140"
+              />
+              <el-table-column
+                prop="land_code"
+                label="Lote"
+                min-width="90"
+              />
+              <el-table-column label="Monto" min-width="110">
+                <template slot-scope="{ row }">
+                  {{ formatCurrency(row.amount) }}
                 </template>
               </el-table-column>
-              <el-table-column :min-width="135" align="right" label="Actions">
-                <div slot-scope="props">
+              <el-table-column
+                prop="payment_date"
+                label="Fecha"
+                min-width="110"
+              />
+              <el-table-column label="Estatus" min-width="120">
+                <template slot-scope="{ row }">
+                  <span :class="statusBadgeClass(row.payment_status_name)">
+                    {{ row.payment_status_name }}
+                  </span>
+                </template>
+              </el-table-column>
+              <el-table-column
+                v-if="canManagePayments"
+                :min-width="100"
+                align="right"
+                label="Acciones"
+              >
+                <template slot-scope="{ row }">
                   <base-button
-                    @click.native="handleLike(props.$index, props.row)"
-                    class="like btn-link"
-                    type="info"
-                    size="sm"
-                    icon
-                  >
-                    <i class="tim-icons icon-heart-2"></i>
-                  </base-button>
-                  <base-button
-                    @click.native="handleEdit(props.$index, props.row)"
+                    @click.native="openEdit(row)"
                     class="edit btn-link"
                     type="warning"
                     size="sm"
                     icon
                   >
-                    <i class="tim-icons icon-pencil"></i>
+                    <i class="tim-icons icon-pencil" />
                   </base-button>
-                  <base-button
-                    @click.native="handleDelete(props.$index, props.row)"
-                    class="remove btn-link"
-                    type="danger"
-                    size="sm"
-                    icon
-                  >
-                    <i class="tim-icons icon-simple-remove"></i>
-                  </base-button>
-                </div>
+                </template>
               </el-table-column>
             </el-table>
           </div>
@@ -106,44 +92,71 @@
             slot="footer"
             class="col-12 d-flex justify-content-center justify-content-sm-between flex-wrap"
           >
-            <div class="">
-              <p class="card-category">
-                Mostrando del {{ from + 1 }} al {{ to }} de
-                {{ total }} resultados
-              </p>
-            </div>
+            <p class="card-category">
+              Mostrando del {{ from + 1 }} al {{ to }} de {{ total }} resultados
+            </p>
             <base-pagination
               class="pagination-no-border"
               v-model="pagination.currentPage"
               :per-page="pagination.perPage"
               :total="total"
-            >
-            </base-pagination>
+            />
           </div>
         </card>
       </div>
     </div>
+
+    <payment-edit-modal
+      :visible.sync="editModalVisible"
+      :payment-id="selectedPaymentId"
+      :initial-payment="selectedPaymentRow"
+      @success="handleEditSuccess"
+      @close="closePaymentModal"
+    />
   </div>
 </template>
+
 <script>
 import { Table, TableColumn, Select, Option } from "element-ui";
-import { BasePagination } from "src/components";
+import { BasePagination } from "@/components";
 import Fuse from "fuse.js";
-import swal from "sweetalert2";
 import { mapGetters, mapActions } from "vuex";
+import PaymentEditModal from "@/components/Payments/PaymentEditModal.vue";
+import { statusBadgeClass } from "@/util/paymentApi";
 
 export default {
+  name: "PaymentsTable",
   components: {
     BasePagination,
+    PaymentEditModal,
     [Select.name]: Select,
     [Option.name]: Option,
     [Table.name]: Table,
     [TableColumn.name]: TableColumn,
   },
+  data() {
+    return {
+      loading: false,
+      searchQuery: "",
+      searchedData: [],
+      fuseSearch: null,
+      editModalVisible: false,
+      selectedPaymentId: null,
+      selectedPaymentRow: null,
+      pagination: {
+        perPage: 10,
+        currentPage: 1,
+        perPageOptions: [5, 10, 25, 50],
+      },
+    };
+  },
   computed: {
-    ...mapGetters(["getResidentials"]),
+    ...mapGetters(["getPayments"]),
+    canManagePayments() {
+      return this.$can("payments.update");
+    },
     tableData() {
-      return this.getResidentials;
+      return this.getPayments;
     },
     queriedData() {
       let result = this.tableData;
@@ -152,15 +165,12 @@ export default {
       }
       return result.slice(this.from, this.to);
     },
-    to() {
-      let highBound = this.from + this.pagination.perPage;
-      if (this.total < highBound) {
-        highBound = this.total;
-      }
-      return highBound;
-    },
     from() {
       return this.pagination.perPage * (this.pagination.currentPage - 1);
+    },
+    to() {
+      const highBound = this.from + this.pagination.perPage;
+      return this.total < highBound ? this.total : highBound;
     },
     total() {
       return this.searchedData.length > 0
@@ -168,140 +178,61 @@ export default {
         : this.tableData.length;
     },
   },
-  data() {
-    return {
-      pagination: {
-        perPage: 5,
-        currentPage: 1,
-        perPageOptions: [5, 10, 25, 50],
-        total: 0,
-      },
-      searchQuery: "",
-      propsToSearch: ["name", "address", "user_name"],
-      tableColumns: [
-        {
-          prop: "name",
-          label: "Nombre",
-          minWidth: 200,
-        },
-        {
-          prop: "address",
-          label: "Direccion",
-          minWidth: 250,
-        },
-        {
-          prop: "user_name",
-          label: "Responsable",
-          minWidth: 120,
-        },
-        {
-          prop: "lands_count",
-          label: "Lotes",
-          minWidth: 100,
-        },
-        {
-          prop: "cost",
-          label: "Costo/precio",
-          minWidth: 120,
-          formatter: (row) => {
-            return `${this.formatCurrency(row.cost)}`;
-          },
-        },
-        {
-          prop: "total_expenses",
-          label: "Gastos",
-          minWidth: 120,
-          formatter: (row) => {
-            return `${this.formatCurrency(row.total_expenses)}`;
-          },
-        },
-      ],
-      searchedData: [],
-      fuseSearch: null,
-    };
-  },
   methods: {
-    ...mapActions(["fetchResidentials", "deleteResidential"]),
-    handleLike(index, row) {
-      swal.fire({
-        title: `Has marcado como favorito el ${row.name}`,
-        buttonsStyling: false,
-        icon: "success",
-        customClass: {
-          confirmButton: "btn btn-success btn-fill",
-        },
+    ...mapActions(["fetchPayments"]),
+    statusBadgeClass,
+    openEdit(row) {
+      this.selectedPaymentRow = row;
+      this.selectedPaymentId = row.id;
+      this.editModalVisible = true;
+    },
+    closePaymentModal() {
+      this.editModalVisible = false;
+      this.selectedPaymentId = null;
+      this.selectedPaymentRow = null;
+    },
+    handleEditSuccess(updatedPayment) {
+      this.closePaymentModal();
+      if (updatedPayment) {
+        this.$store.commit("setPaymentUpdate", updatedPayment);
+      }
+      this.fetchPayments();
+    },
+    loadPayments() {
+      this.loading = true;
+      this.fetchPayments().finally(() => {
+        this.loading = false;
+        this.fuseSearch = new Fuse(this.tableData, {
+          keys: [
+            "client_name",
+            "residential_name",
+            "land_code",
+            "payment_status_name",
+          ],
+          threshold: 0.3,
+        });
       });
     },
-    handleEdit(index, row) {
-      this.$router.push({ name: "EditResidential", params: { id: row.id } });
-    },
-    handleDelete(index, row) {
-      swal
-        .fire({
-          title: "Estas seguro?",
-          text: `No podras revertir estos cambios!`,
-          icon: "warning",
-          showCancelButton: true,
-          customClass: {
-            confirmButton: "btn btn-success btn-fill",
-            cancelButton: "btn btn-danger btn-fill",
-          },
-          confirmButtonText: "Si, Borralo!",
-          buttonsStyling: false,
-        })
-        .then((result) => {
-          if (result.value) {
-            this.deleteResidential(row.id);
-            this.deleteRow(row);
-            swal.fire({
-              title: "Eliminado!",
-              text: `Has Borrado: ${row.name}`,
-              icon: "success",
-              confirmButtonClass: "btn btn-success btn-fill",
-              buttonsStyling: false,
-            });
-          }
-        });
-    },
-    deleteRow(row) {
-      let indexToDelete = this.tableData.findIndex(
-        (tableRow) => tableRow.id === row.id
-      );
-      if (indexToDelete >= 0) {
-        this.tableData.splice(indexToDelete, 1);
-      }
-    },
-    goToCreateResidential() {
-      this.$router.push({ name: "CreateResidential" });
-    },
-  },
-  mounted() {
-    this.fuseSearch = new Fuse(this.getResidentials, {
-      keys: ["name", "address", "user_name"],
-      threshold: 0.3,
-    });
-  },
-  created() {
-    this.$store.dispatch("fetchResidentials");
   },
   watch: {
     searchQuery(value) {
       let result = this.tableData;
-      if (value !== "") {
-        const searchResult = this.fuseSearch.search(this.searchQuery);
-        result = searchResult.map((item) => item.item);
+      if (value !== "" && this.fuseSearch) {
+        result = this.fuseSearch.search(value).map((item) => item.item);
       }
       this.searchedData = result;
+      this.pagination.currentPage = 1;
     },
+  },
+  created() {
+    this.loadPayments();
   },
 };
 </script>
-<style>
+
+<style scoped>
 .pagination-select,
 .search-input {
   width: 200px;
-}
-.swal2-icon-content {
-  font-size: inherit !important;
 }
 </style>

@@ -163,12 +163,7 @@ export default {
     };
   },
   computed: {
-    ...mapGetters([
-      "getLandById",
-      "getClientById",
-      "getContractById",
-      "getPayments",
-    ]),
+    ...mapGetters(["getLandById", "getClientById", "getContractById"]),
     landInfo() {
       return this.getLandById;
     },
@@ -179,7 +174,7 @@ export default {
       return this.getContractById;
     },
     paymentInfo() {
-      return this.getPayments;
+      return this.contractInfo.payments || [];
     },
     formattedStartDate() {
       return moment(this.contractInfo.start_date).locale("es").format("LL"); // Formato largo localizado

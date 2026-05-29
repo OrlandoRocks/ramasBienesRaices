@@ -81,6 +81,7 @@ import { extend } from "vee-validate";
 import { required, email, min } from "vee-validate/dist/rules";
 import "@/store/index.js";
 import { mapActions, mapGetters } from "vuex";
+import { getDefaultRouteForUser } from "@/util/userSession";
 
 extend("email", email);
 extend("min", min);
@@ -121,7 +122,7 @@ export default {
             message: `Bienvenido ${this.getUserEmail}...`,
             icon: "tim-icons icon-bell-55",
           });
-          this.$router.push("/dashboard");
+          this.$router.push(getDefaultRouteForUser(this.$store.getters.currentUser));
         })
         .catch((error) => {
           console.log("error");

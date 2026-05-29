@@ -25,7 +25,11 @@
                 >
                 </el-option>
               </el-select>
-              <base-button @click="goToCreateExpense" type="info">
+              <base-button
+                v-if="$can('expenses.create')"
+                @click="goToCreateExpense"
+                type="info"
+              >
                 <i class="tim-icons icon-simple-add"> </i> Crear Nuevo
               </base-button>
               <base-input>
@@ -69,9 +73,15 @@
                   </template>
                 </template>
               </el-table-column>
-              <el-table-column :min-width="135" align="right" label="Acciones">
+              <el-table-column
+                v-if="$can('expenses.update') || $can('expenses.destroy')"
+                :min-width="135"
+                align="right"
+                label="Acciones"
+              >
                 <div slot-scope="props">
                   <base-button
+                    v-if="$can('expenses.update')"
                     @click.native="handleEdit(props.$index, props.row)"
                     class="edit btn-link"
                     type="warning"
@@ -81,6 +91,7 @@
                     <i class="tim-icons icon-pencil"></i>
                   </base-button>
                   <base-button
+                    v-if="$can('expenses.destroy')"
                     @click.native="handleDelete(props.$index, props.row)"
                     class="remove btn-link"
                     type="danger"

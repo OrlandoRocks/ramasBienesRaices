@@ -1,254 +1,248 @@
 <template>
-  <div>
-    <div class="col-md-12" v-if="payment_status_name == 'Pagado'">
+  <div class="content">
+    <div v-if="canManagePayments" class="col-md-10 ml-auto mr-auto">
       <card>
         <h4 slot="header" class="card-title">
-          <b>Informacion del Pago</b>
+          <i class="tim-icons icon-money-coins" />
+          Administrar pago
         </h4>
-
-        <div class="card-body">
-          <div class="typography-line">
-            <h3>
-              <span><b>Cantidad:</b></span
-              >{{ this.formatCurrency(amount) }} MXN
-            </h3>
-          </div>
-
-          <div class="typography-line">
-            <h3>
-              <span><b>Tipo de Pago:</b></span
-              >{{ payment_type }}
-            </h3>
-          </div>
-
-          <div class="typography-line">
-            <h3>
-              <span><b>Comentarios:</b></span
-              >{{ comments }}
-            </h3>
-          </div>
-
-          <div class="typography-line">
-            <h3>
-              <span><b>Ruta Imagen:</b></span>
-              {{ image_url }}
-            </h3>
-          </div>
-
-          <div class="typography-line">
-            <h3>
-              <span><b>Fecha del Pago:</b></span
-              >{{ payment_date }}
-            </h3>
-          </div>
-
-          <div class="typography-line">
-            <h3>
-              <span><b>Estatus:</b></span
-              >
-              <p class="text-success">
-                {{ payment_status_name }}
-              </p>
-            </h3>
-          </div>
-        </div>
+        <payment-edit-form
+          v-if="validPaymentId"
+          :payment-id="validPaymentId"
+          @success="handleManageSuccess"
+          @cancel="goBack"
+        />
       </card>
     </div>
-    <ValidationObserver v-slot="{ handleSubmit }" v-else>
-      <form class="form-horizontal" @submit.prevent="handleSubmit(submit)">
+
+    <template v-else>
+      <div class="col-md-12" v-if="payment_status_name == 'Pagado'">
         <card>
           <h4 slot="header" class="card-title">
-            <i class="tim-icons icon-vector"></i>
-            Pagos
+            <b>Informacion del Pago</b>
           </h4>
-          <h4 class="text-center">
-            Si la cantidad de pago es mayor o menor a lo que se acordo, la
-            diferencia sera reflejada en el siguiente pago
-          </h4>
-          <div>
-            <div class="row">
-              <label class="col-sm-2 col-form-label">Cantidad:</label>
-              <div class="col-sm-7">
-                <ValidationProvider
-                  name="amount"
-                  rules="required"
-                  v-slot="{ passed, failed, errors }"
-                >
-                  <base-input
-                    required
-                    v-model="amount"
-                    :error="errors[0]"
-                    :class="[
-                      { 'has-success': passed },
-                      { 'has-danger': failed },
-                    ]"
-                  >
-                  </base-input>
-                </ValidationProvider>
-              </div>
+          <div class="card-body">
+            <div class="typography-line">
+              <h3>
+                <span><b>Cantidad:</b></span>
+                {{ formatCurrency(amount) }} MXN
+              </h3>
             </div>
-            <div class="row">
-              <label class="col-sm-2 col-form-label">Tipo de Pago:</label>
-              <div class="col-sm-7">
-                <ValidationProvider
-                  name="tipo de pago"
-                  rules="required"
-                  v-slot="{ passed, failed, errors }"
-                >
-                  <base-input
-                    required
-                    v-model="payment_type"
-                    :error="errors[0]"
-                    :class="[
-                      { 'has-success': passed },
-                      { 'has-danger': failed },
-                    ]"
-                  >
-                  </base-input>
-                </ValidationProvider>
-              </div>
+            <div class="typography-line">
+              <h3>
+                <span><b>Tipo de Pago:</b></span>
+                {{ payment_type }}
+              </h3>
             </div>
-
-            <div class="row">
-              <label class="col-sm-2 col-form-label">Comentarios:</label>
-              <div class="col-sm-7">
-                <ValidationProvider
-                  name="comentarios"
-                  rules="required"
-                  v-slot="{ passed, failed, errors }"
-                >
-                  <base-input
-                    required
-                    v-model="comments"
-                    :error="errors[0]"
-                    :class="[
-                      { 'has-success': passed },
-                      { 'has-danger': failed },
-                    ]"
-                  >
-                  </base-input>
-                </ValidationProvider>
-              </div>
+            <div class="typography-line">
+              <h3>
+                <span><b>Comentarios:</b></span>
+                {{ comments }}
+              </h3>
             </div>
-
-            <div class="row">
-              <label class="col-sm-2 col-form-label">Ruta Imagen:</label>
-              <div class="col-sm-7">
-                <ValidationProvider
-                  name="imagen"
-                  rules="required"
-                  v-slot="{ passed, failed, errors }"
-                >
-                  <base-input
-                    required
-                    v-model="image_url"
-                    :error="errors[0]"
-                    :class="[
-                      { 'has-success': passed },
-                      { 'has-danger': failed },
-                    ]"
-                  >
-                  </base-input>
-                </ValidationProvider>
-              </div>
+            <div class="typography-line">
+              <h3>
+                <span><b>Ruta Imagen:</b></span>
+                {{ image_url }}
+              </h3>
             </div>
-
-            <div class="row">
-              <label class="col-sm-2 col-form-label">Fecha del Pago: </label>
-              <div class="col-sm-7">
-                <ValidationProvider name="fecha del pago">
-                  <base-input>
-                    <el-date-picker
-                      type="date"
-                      placeholder="Fecha del Pagos"
-                      v-model="payment_date"
-                      value-format="yyyy-MM-dd"
-                    >
-                    </el-date-picker>
-                  </base-input>
-                </ValidationProvider>
-              </div>
+            <div class="typography-line">
+              <h3>
+                <span><b>Fecha del Pago:</b></span>
+                {{ payment_date }}
+              </h3>
             </div>
-
-            <div class="row">
-              <label class="col-sm-2 col-form-label">Estatus:</label>
-              <div class="col-sm-7">
-                <p class="text-warning" style="padding-top: 7px">
-                  {{ payment_status_name }}
-                </p>
-              </div>
+            <div class="typography-line">
+              <h3>
+                <span><b>Estatus:</b></span>
+                <p class="text-success">{{ payment_status_name }}</p>
+              </h3>
             </div>
-          </div>
-          <div class="text-center">
-            <base-button
-              :disabled="isSubmitting"
-              native-type="submit"
-              type="primary"
-              >Guardar</base-button
-            >
           </div>
         </card>
-      </form>
-    </ValidationObserver>
-    <div class="col-md-12">
-      <card>
-        <h4 slot="header" class="card-title">
-          <b>Informacion del Contrato</b>
-        </h4>
+      </div>
 
-        <div class="card-body">
-          <div class="typography-line">
-            <h3>
-              <span><b>Terreno:</b></span
-              >{{ land_code }}
-            </h3>
-          </div>
+      <ValidationObserver v-slot="{ handleSubmit }" v-else>
+        <form class="form-horizontal" @submit.prevent="handleSubmit(submitCapture)">
+          <card>
+            <h4 slot="header" class="card-title">
+              <i class="tim-icons icon-vector"></i>
+              Capturar pago
+            </h4>
+            <h4 class="text-center">
+              Si la cantidad de pago es mayor o menor a lo acordado, la diferencia
+              sera reflejada en el siguiente pago
+            </h4>
+            <div class="payment-capture-form">
+              <div class="row form-field-row">
+                <label class="col-sm-2 col-form-label payment-form-label">Cantidad:</label>
+                <div class="col-sm-7">
+                  <ValidationProvider
+                    name="amount"
+                    rules="required|positiveAmount"
+                    v-slot="{ passed, failed, errors }"
+                  >
+                    <base-input
+                      v-model="amount"
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      :error="errors[0]"
+                      :class="[
+                        { 'has-success': passed },
+                        { 'has-danger': failed },
+                      ]"
+                    />
+                  </ValidationProvider>
+                </div>
+              </div>
+              <div class="row form-field-row">
+                <label class="col-sm-2 col-form-label payment-form-label">Tipo de Pago:</label>
+                <div class="col-sm-7">
+                  <ValidationProvider
+                    name="tipo de pago"
+                    rules="required"
+                    v-slot="{ passed, failed, errors }"
+                  >
+                    <base-input
+                      v-model="payment_type"
+                      :error="errors[0]"
+                      :class="[
+                        { 'has-success': passed },
+                        { 'has-danger': failed },
+                      ]"
+                    />
+                  </ValidationProvider>
+                </div>
+              </div>
+              <div class="row form-field-row">
+                <label class="col-sm-2 col-form-label payment-form-label">Comentarios:</label>
+                <div class="col-sm-7">
+                  <ValidationProvider
+                    name="comentarios"
+                    rules="required"
+                    v-slot="{ passed, failed, errors }"
+                  >
+                    <base-input
+                      v-model="comments"
+                      :error="errors[0]"
+                      :class="[
+                        { 'has-success': passed },
+                        { 'has-danger': failed },
+                      ]"
+                    />
+                  </ValidationProvider>
+                </div>
+              </div>
+              <div class="row form-field-row">
+                <label class="col-sm-2 col-form-label payment-form-label">Ruta Imagen:</label>
+                <div class="col-sm-7">
+                  <ValidationProvider
+                    name="imagen"
+                    rules="required"
+                    v-slot="{ passed, failed, errors }"
+                  >
+                    <base-input
+                      v-model="image_url"
+                      :error="errors[0]"
+                      :class="[
+                        { 'has-success': passed },
+                        { 'has-danger': failed },
+                      ]"
+                    />
+                  </ValidationProvider>
+                </div>
+              </div>
+              <div class="row form-field-row">
+                <label class="col-sm-2 col-form-label payment-form-label">Fecha del Pago:</label>
+                <div class="col-sm-7">
+                  <div class="field-control">
+                    <el-date-picker
+                      type="date"
+                      placeholder="Fecha del Pago"
+                      v-model="payment_date"
+                      value-format="yyyy-MM-dd"
+                      class="payment-form-date"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="row form-field-row">
+                <label class="col-sm-2 col-form-label payment-form-label">Estatus:</label>
+                <div class="col-sm-7">
+                  <p class="text-warning" style="padding-top: 7px">
+                    {{ payment_status_name }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="text-center">
+              <base-button
+                :disabled="isSubmitting"
+                native-type="submit"
+                type="primary"
+              >
+                Guardar
+              </base-button>
+            </div>
+          </card>
+        </form>
+      </ValidationObserver>
 
-          <div class="typography-line">
-            <h3>
-              <span><b>Direccion:</b></span
-              >{{ land_address }}
-            </h3>
+      <div class="col-md-12" v-if="land_code">
+        <card>
+          <h4 slot="header" class="card-title"><b>Informacion del Contrato</b></h4>
+          <div class="card-body">
+            <div class="typography-line">
+              <h3><span><b>Terreno:</b></span>{{ land_code }}</h3>
+            </div>
+            <div class="typography-line">
+              <h3><span><b>Direccion:</b></span>{{ land_address }}</h3>
+            </div>
+            <div class="typography-line">
+              <h3><span><b>Cliente:</b></span>{{ client_name }}</h3>
+            </div>
           </div>
-
-          <div class="typography-line">
-            <h3>
-              <span><b>Nombre del Cliente > Telefono:</b></span
-              >{{ client_name }}
-            </h3>
-          </div>
-
-          <div class="typography-line">
-            <h3>
-              <span><b>Pago por mes:</b></span>
-              {{ this.formatCurrency(amount) }} MXN
-            </h3>
-          </div>
-        </div>
-      </card>
-    </div>
+        </card>
+      </div>
+    </template>
   </div>
 </template>
 
 <script>
-import { Table, TableColumn, DatePicker, Option, Select } from "element-ui";
 import { extend } from "vee-validate";
-import { required, numeric } from "vee-validate/dist/rules";
-import { mapActions, mapGetters } from "vuex";
-import router from "@/router/router";
+import { required } from "vee-validate/dist/rules";
+import { DatePicker } from "element-ui";
+import { ValidationObserver, ValidationProvider } from "vee-validate";
+import { mapActions } from "vuex";
 import swal from "sweetalert2";
+import PaymentEditForm from "@/components/Payments/PaymentEditForm.vue";
+import { normalizePaymentAmount } from "@/util/paymentApi";
 
 extend("required", required);
-extend("numeric", numeric);
+extend("positiveAmount", {
+  validate(value) {
+    const num = parseFloat(value);
+    return !Number.isNaN(num) && num > 0;
+  },
+  message: "La cantidad debe ser un número mayor a cero",
+});
+
+function isValidPaymentId(id) {
+  if (id === null || id === undefined || id === "") {
+    return false;
+  }
+  const normalized = String(id).trim();
+  return normalized !== "" && normalized !== "undefined" && normalized !== "null";
+}
 
 export default {
   name: "PaymentForm",
   components: {
-    [Table.name]: Table,
-    [TableColumn.name]: TableColumn,
+    ValidationObserver,
+    ValidationProvider,
+    PaymentEditForm,
     [DatePicker.name]: DatePicker,
-    [Select.name]: Select,
-    [Option.name]: Option,
   },
   data() {
     return {
@@ -258,10 +252,8 @@ export default {
       comments: "",
       image_url: "",
       payment_date: "",
-      status: "",
       payment_status_name: "",
       contract_id: "",
-      contract: {},
       land_code: "",
       land_address: "",
       client_name: "",
@@ -270,122 +262,187 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(["getResidentials"]),
-    residentialList() {
-      return this.getResidentials;
+    canManagePayments() {
+      return this.$can("payments.update");
     },
-    tableData() {
-      return this.lands.map((land) => ({
-        ...land,
-        residential_name: this.getResidentialName(land.residential_id),
-      }));
+    validPaymentId() {
+      return this.id || this.$route.params.id;
     },
   },
   methods: {
-    ...mapActions(["updatePayment", "fetchPaymentById", "createLand"]),
+    ...mapActions(["updatePayment", "fetchPaymentById"]),
     loadPaymentData(id) {
       this.fetchPaymentById(id)
         .then((payment) => {
-          console.log(payment);
           this.id = payment.id;
-          this.amount = payment.amount;
-          this.payment_date = payment.payment_date;
+          this.amount = normalizePaymentAmount(payment.amount);
+          this.payment_date = payment.payment_date || new Date().toISOString().slice(0, 10);
           this.payment_type = payment.payment_type;
           this.comments = payment.comments;
           this.image_url = payment.image_url;
-          this.status = payment.status;
           this.payment_status_name = payment.payment_status_name;
-          this.contract = payment.contract;
           this.land_code = payment.land_code;
           this.land_address = payment.land_address;
           this.client_name = payment.client_name;
           this.residential_name = payment.residential_name;
-          this.contract_id = payment.contract.id;
+          this.contract_id = payment.contract_id || payment.contract?.id || "";
         })
-        .catch((error) => {
-          console.log(error);
+        .catch(() => {
+          this.$notify({
+            title: "Error",
+            type: "danger",
+            message: "No se pudo cargar el pago",
+          });
         });
     },
-    submit() {
+    goBack() {
+      const returnTo = this.$route.query.returnTo;
+      const landId = this.$route.query.landId;
+      if (returnTo === "land" && landId) {
+        this.$router.push({ name: "EditLand", params: { id: landId } });
+      } else if (returnTo === "contract" && this.$route.query.contractId) {
+        this.$router.push({
+          name: "ShowContract",
+          params: { id: this.$route.query.contractId },
+        });
+      } else {
+        this.$router.push({ name: "Payments" });
+      }
+    },
+    handleManageSuccess() {
+      this.goBack();
+    },
+    submitCapture() {
+      if (!this.$can("payments.capture")) {
+        this.$notify({
+          title: "Sin permiso",
+          type: "warning",
+          message: "No tienes permiso para capturar pagos.",
+        });
+        return;
+      }
+
       swal
         .fire({
-          title: "Estas seguro de guardar este pago?",
-          text: `No podras revertir estos cambios! \n  Monto: ${this.formatCurrency(
-            this.amount
-          )}, Fecha del Pago: ${this.payment_date}`,
+          title: "¿Guardar este pago?",
+          text: `Monto: ${this.formatCurrency(this.amount)}, Fecha: ${this.payment_date}`,
           icon: "warning",
           showCancelButton: true,
-          customClass: {
-            confirmButton: "btn btn-success btn-fill",
-            cancelButton: "btn btn-danger btn-fill",
-          },
-          confirmButtonText: "Si, Guadralo!",
-          buttonsStyling: false,
+          confirmButtonText: "Sí, guardar",
+          cancelButtonText: "Cancelar",
         })
         .then((result) => {
           if (result.value) {
-            this.handleSubmit();
-            swal.fire({
-              title: "Guardado!",
-              text: `Monto: ${this.formatCurrency(
-                this.amount
-              )}, Fecha del Pago: ${this.payment_date}`,
-              icon: "success",
-              confirmButtonClass: "btn btn-success btn-fill",
-              buttonsStyling: false,
-            });
+            this.saveCapture();
           }
         });
     },
-    handleSubmit() {
-      let data = {
+    saveCapture() {
+      const paymentId = this.validPaymentId;
+      if (!isValidPaymentId(paymentId)) {
+        this.$notify({
+          title: "Error",
+          type: "danger",
+          message: "No se encontró el pago a actualizar",
+        });
+        return;
+      }
+
+      this.isSubmitting = true;
+      this.updatePayment({
+        id: paymentId,
         payment: {
-          id: this.id,
+          id: paymentId,
           amount: this.amount,
           payment_date: this.payment_date,
           payment_type: this.payment_type,
           comments: this.comments,
           image_url: this.image_url,
-          status: 1,
+          status: "Pagado",
         },
-      };
-      this.isSubmitting = true;
-      this.updatePayment(data)
+      })
         .then(() => {
-          router.push(`/contracts/${this.contract_id}/show`);
           this.$notify({
-            title: "Success",
+            title: "Éxito",
             type: "success",
-            message: "Pago Capturado con éxito",
-            icon: "tim-icons icon-bell-55",
+            message: "Pago capturado con éxito",
           });
+          this.goBack();
         })
-        .catch((error) => {
-          console.log(error);
-          this.isSubmitting = false;
+        .catch(() => {
           this.$notify({
             title: "Error",
             type: "danger",
-            message: "Error al actualizar el Pago",
-            icon: "tim-icons icon-bell-55",
+            message: "Error al capturar el pago",
           });
+        })
+        .finally(() => {
+          this.isSubmitting = false;
         });
     },
   },
-  mounted() {
-    this.$store.dispatch("fetchResidentials");
-  },
   created() {
     const paymentId = this.$route.params.id;
-    if (paymentId) {
-      this.loadPaymentData(paymentId);
+    if (isValidPaymentId(paymentId)) {
+      this.id = paymentId;
+      if (!this.canManagePayments) {
+        this.loadPaymentData(paymentId);
+      }
+    } else {
+      this.$notify({
+        title: "Error",
+        type: "danger",
+        message: "Pago no válido.",
+      });
     }
   },
 };
 </script>
 
-<style>
+<style scoped>
 .error-message {
   color: red;
+}
+
+.payment-capture-form .payment-form-label {
+  color: #1a1a1a !important;
+  font-weight: 600;
+}
+
+.payment-capture-form .form-field-row {
+  margin-bottom: 1.25rem;
+}
+
+.payment-capture-form .field-control {
+  width: 100%;
+  display: block;
+}
+
+.payment-capture-form .payment-form-date {
+  width: 100% !important;
+}
+
+.payment-capture-form ::v-deep .el-date-editor.el-input {
+  width: 100%;
+  display: block;
+}
+
+.payment-capture-form ::v-deep .form-control,
+.payment-capture-form ::v-deep input.form-control,
+.payment-capture-form ::v-deep textarea.form-control {
+  color: #1a1a1a !important;
+  -webkit-text-fill-color: #1a1a1a;
+}
+
+.payment-capture-form ::v-deep .form-control::placeholder,
+.payment-capture-form ::v-deep textarea.form-control::placeholder {
+  color: #6c757d !important;
+  -webkit-text-fill-color: #6c757d;
+  opacity: 1;
+}
+
+.payment-capture-form ::v-deep .el-input__inner {
+  color: #1a1a1a !important;
+  -webkit-text-fill-color: #1a1a1a;
 }
 </style>
