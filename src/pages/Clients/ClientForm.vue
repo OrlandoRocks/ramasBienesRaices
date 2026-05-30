@@ -214,6 +214,35 @@
               </div>
             </div>
 
+            <div v-if="canManageResidentialLinks" class="row">
+              <label class="col-sm-2 col-form-label"
+                >Fraccionamientos vinculados</label
+              >
+              <div class="col-sm-7">
+                <el-select
+                  class="select-primary"
+                  style="width: 100%; margin-bottom: 10px"
+                  size="large"
+                  v-model="residential_ids"
+                  multiple
+                  filterable
+                  collapse-tags
+                  placeholder="Seleccionar desarrollos"
+                >
+                  <el-option
+                    v-for="res in residentialOptions"
+                    :key="String(res.id)"
+                    :label="res.name"
+                    :value="res.id"
+                  />
+                </el-select>
+                <small class="text-muted d-block">
+                  El cliente solo será visible para el personal asignado a estos
+                  desarrollos.
+                </small>
+              </div>
+            </div>
+
             <client-documents-section
               v-if="canManageDocuments"
               :client="clientForDocuments"
@@ -286,9 +315,15 @@ export default {
     ClientDocumentsSection,
   },
   computed: {
-    ...mapGetters(["getClientById"]),
+    ...mapGetters(["getClientById", "getResidentials", "currentUser"]),
     canManageDocuments() {
       return this.$can("clients.create") || this.$can("clients.update");
+    },
+    canManageResidentialLinks() {
+      return this.$canManageClientResidentialLinks();
+    },
+    residentialOptions() {
+      return this.getResidentials || [];
     },
     clientForDocuments() {
       return {
@@ -326,6 +361,7 @@ export default {
       documentFiles: {},
       documentFieldErrors: {},
       verificationStatuses: {},
+      residential_ids: [],
       formErrors: [],
     };
   },
@@ -335,6 +371,7 @@ export default {
       "fetchLands",
       "fetchClientById",
       "updateClient",
+      "fetchResidentials",
       "getPresignedUrl",
       "uploadFileToS3",
     ]),
@@ -361,9 +398,11 @@ export default {
           this.city = res.city;
           this.image = res.image;
           this.documents = res.documents || emptyDocumentsPayload();
+          this.residential_ids = [...(res.residential_ids || [])];
           this.verificationStatuses = {
             ine_verification_status: res.ine_verification_status,
-            tax_document_verification_status: res.tax_document_verification_status,
+            tax_document_verification_status:
+              res.tax_document_verification_status,
             proof_of_address_verification_status:
               res.proof_of_address_verification_status,
           };
@@ -391,6 +430,9 @@ export default {
       };
       if (this.canManageDocuments) {
         Object.assign(payload, this.verificationStatuses);
+      }
+      if (this.canManageResidentialLinks) {
+        payload.residential_ids = this.residential_ids;
       }
       return payload;
     },
@@ -521,9 +563,13 @@ export default {
       this.documentFieldErrors = {};
       this.verificationStatuses = {};
       this.formErrors = [];
+      this.residential_ids = [];
     },
   },
   created() {
+    if (this.canManageResidentialLinks) {
+      this.fetchResidentials();
+    }
     if (this.$route.params.id) {
       this.id = this.$route.params.id;
       this.loadClientData(this.id);

@@ -63,19 +63,24 @@
       </div>
 
       <ValidationObserver v-slot="{ handleSubmit }" v-else>
-        <form class="form-horizontal" @submit.prevent="handleSubmit(submitCapture)">
+        <form
+          class="form-horizontal"
+          @submit.prevent="handleSubmit(submitCapture)"
+        >
           <card>
             <h4 slot="header" class="card-title">
               <i class="tim-icons icon-vector"></i>
               Capturar pago
             </h4>
             <h4 class="text-center">
-              Si la cantidad de pago es mayor o menor a lo acordado, la diferencia
-              sera reflejada en el siguiente pago
+              Si la cantidad de pago es mayor o menor a lo acordado, la
+              diferencia sera reflejada en el siguiente pago
             </h4>
             <div class="payment-capture-form">
               <div class="row form-field-row">
-                <label class="col-sm-2 col-form-label payment-form-label">Cantidad:</label>
+                <label class="col-sm-2 col-form-label payment-form-label"
+                  >Cantidad:</label
+                >
                 <div class="col-sm-7">
                   <ValidationProvider
                     name="amount"
@@ -97,7 +102,9 @@
                 </div>
               </div>
               <div class="row form-field-row">
-                <label class="col-sm-2 col-form-label payment-form-label">Tipo de Pago:</label>
+                <label class="col-sm-2 col-form-label payment-form-label"
+                  >Tipo de Pago:</label
+                >
                 <div class="col-sm-7">
                   <ValidationProvider
                     name="tipo de pago"
@@ -116,7 +123,9 @@
                 </div>
               </div>
               <div class="row form-field-row">
-                <label class="col-sm-2 col-form-label payment-form-label">Comentarios:</label>
+                <label class="col-sm-2 col-form-label payment-form-label"
+                  >Comentarios:</label
+                >
                 <div class="col-sm-7">
                   <ValidationProvider
                     name="comentarios"
@@ -135,7 +144,9 @@
                 </div>
               </div>
               <div class="row form-field-row">
-                <label class="col-sm-2 col-form-label payment-form-label">Ruta Imagen:</label>
+                <label class="col-sm-2 col-form-label payment-form-label"
+                  >Ruta Imagen:</label
+                >
                 <div class="col-sm-7">
                   <ValidationProvider
                     name="imagen"
@@ -154,7 +165,9 @@
                 </div>
               </div>
               <div class="row form-field-row">
-                <label class="col-sm-2 col-form-label payment-form-label">Fecha del Pago:</label>
+                <label class="col-sm-2 col-form-label payment-form-label"
+                  >Fecha del Pago:</label
+                >
                 <div class="col-sm-7">
                   <div class="field-control">
                     <el-date-picker
@@ -168,7 +181,9 @@
                 </div>
               </div>
               <div class="row form-field-row">
-                <label class="col-sm-2 col-form-label payment-form-label">Estatus:</label>
+                <label class="col-sm-2 col-form-label payment-form-label"
+                  >Estatus:</label
+                >
                 <div class="col-sm-7">
                   <p class="text-warning" style="padding-top: 7px">
                     {{ payment_status_name }}
@@ -191,16 +206,27 @@
 
       <div class="col-md-12" v-if="land_code">
         <card>
-          <h4 slot="header" class="card-title"><b>Informacion del Contrato</b></h4>
+          <h4 slot="header" class="card-title">
+            <b>Informacion del Contrato</b>
+          </h4>
           <div class="card-body">
             <div class="typography-line">
-              <h3><span><b>Terreno:</b></span>{{ land_code }}</h3>
+              <h3>
+                <span><b>Terreno:</b></span
+                >{{ land_code }}
+              </h3>
             </div>
             <div class="typography-line">
-              <h3><span><b>Direccion:</b></span>{{ land_address }}</h3>
+              <h3>
+                <span><b>Direccion:</b></span
+                >{{ land_address }}
+              </h3>
             </div>
             <div class="typography-line">
-              <h3><span><b>Cliente:</b></span>{{ client_name }}</h3>
+              <h3>
+                <span><b>Cliente:</b></span
+                >{{ client_name }}
+              </h3>
             </div>
           </div>
         </card>
@@ -233,7 +259,9 @@ function isValidPaymentId(id) {
     return false;
   }
   const normalized = String(id).trim();
-  return normalized !== "" && normalized !== "undefined" && normalized !== "null";
+  return (
+    normalized !== "" && normalized !== "undefined" && normalized !== "null"
+  );
 }
 
 export default {
@@ -276,7 +304,8 @@ export default {
         .then((payment) => {
           this.id = payment.id;
           this.amount = normalizePaymentAmount(payment.amount);
-          this.payment_date = payment.payment_date || new Date().toISOString().slice(0, 10);
+          this.payment_date =
+            payment.payment_date || new Date().toISOString().slice(0, 10);
           this.payment_type = payment.payment_type;
           this.comments = payment.comments;
           this.image_url = payment.image_url;
@@ -325,7 +354,9 @@ export default {
       swal
         .fire({
           title: "¿Guardar este pago?",
-          text: `Monto: ${this.formatCurrency(this.amount)}, Fecha: ${this.payment_date}`,
+          text: `Monto: ${this.formatCurrency(this.amount)}, Fecha: ${
+            this.payment_date
+          }`,
           icon: "warning",
           showCancelButton: true,
           confirmButtonText: "Sí, guardar",

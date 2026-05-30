@@ -70,7 +70,10 @@ export function setupAxios() {
     (error) => {
       if (error.response?.status === 401 && shouldHandleUnauthorized(error)) {
         handleUnauthorized();
-      } else if (error.response?.status === 403 && shouldHandleUnauthorized(error)) {
+      } else if (
+        error.response?.status === 403 &&
+        shouldHandleUnauthorized(error)
+      ) {
         notifyForbidden(error);
       }
       return Promise.reject(error);

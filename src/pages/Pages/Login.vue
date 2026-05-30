@@ -122,7 +122,9 @@ export default {
             message: `Bienvenido ${this.getUserEmail}...`,
             icon: "tim-icons icon-bell-55",
           });
-          this.$router.push(getDefaultRouteForUser(this.$store.getters.currentUser));
+          this.$router.push(
+            getDefaultRouteForUser(this.$store.getters.currentUser)
+          );
         })
         .catch((error) => {
           console.log("error");

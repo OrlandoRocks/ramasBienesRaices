@@ -1,8 +1,6 @@
 import usersService from "@/services/usersService";
-import {
-  parseManagedUserList,
-  parseManagedUserShow,
-} from "@/util/userApi";
+import { parseManagedUserList, parseManagedUserShow } from "@/util/userApi";
+import { isStaffAssignableRole } from "@/util/assignmentHelpers";
 
 const state = {
   users: [],
@@ -24,17 +22,24 @@ const actions = {
       commit("setRoles", roles);
       commit(
         "setSelectOptions",
-        users.map((user) => ({
-          id: user.id,
-          full_name: user.fullName,
-          email: user.email,
-        }))
+        users
+          .filter((user) => isStaffAssignableRole(user.roleName))
+          .map((user) => ({
+            id: user.id,
+            full_name: user.fullName,
+            name: user.name,
+            last_name: user.lastName,
+            email: user.email,
+            role_name: user.roleName,
+          }))
       );
       return { users, roles };
     });
   },
   fetchUserById(_, id) {
-    return usersService.get(id).then((response) => parseManagedUserShow(response));
+    return usersService
+      .get(id)
+      .then((response) => parseManagedUserShow(response));
   },
   createUser(_, payload) {
     return usersService.create(payload);

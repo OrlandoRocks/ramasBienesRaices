@@ -6,6 +6,8 @@ export function normalizeClientFromApi(client) {
   }
   const documents = client.documents || emptyDocumentsPayload();
 
+  const residentialIds = client.residential_ids;
+
   return {
     id: client.id,
     code: client.code || "",
@@ -35,6 +37,9 @@ export function normalizeClientFromApi(client) {
     monthly_expenses: client.monthly_expenses ?? 0,
     comments: client.comments || "",
     image: client.image || "",
+    residential_ids: Array.isArray(residentialIds)
+      ? residentialIds.map((id) => Number(id))
+      : [],
     documents,
     ine_verification_status:
       client.ine_verification_status ||

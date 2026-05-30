@@ -11,11 +11,13 @@
       <form class="form-horizontal" @submit.prevent="fetchRecords()">
         <card>
           <div class="row">
-            <label class="col-sm-2 col-form-label in-middle" for="residential">Fraccionamiento:</label>
+            <label class="col-sm-2 col-form-label in-middle" for="residential"
+              >Fraccionamiento:</label
+            >
             <div class="col-sm-3">
               <el-select
                 class="select-primary in-middle"
-                style="width: 100%;"
+                style="width: 100%"
                 size="large"
                 placeholder="Seleccionar el fracionamiento"
                 v-model="residentials_list"
@@ -32,25 +34,42 @@
               </el-select>
             </div>
 
-            <label class="col-sm-1 col-form-label in-middle" for="month">Mes:</label>
+            <label class="col-sm-1 col-form-label in-middle" for="month"
+              >Mes:</label
+            >
             <div class="col-sm-2">
               <el-select
                 v-model="selectedMonth"
                 id="month"
                 class="select-primary in-middle"
-                style="width: 100%;"
+                style="width: 100%"
               >
                 <el-option disabled value="">Seleccione un mes</el-option>
-                <el-option v-for="(month, index) in months" :key="index" :value="index + 1" :label="month"></el-option>
+                <el-option
+                  v-for="(month, index) in months"
+                  :key="index"
+                  :value="index + 1"
+                  :label="month"
+                ></el-option>
               </el-select>
             </div>
 
-            <label class="col-sm-1 col-form-label in-middle" for="year">Año:</label>
+            <label class="col-sm-1 col-form-label in-middle" for="year"
+              >Año:</label
+            >
             <div class="col-sm-1">
-              <base-input type="number" v-model="selectedYear" placeholder="Año" id="year" class="in-middle"></base-input>
+              <base-input
+                type="number"
+                v-model="selectedYear"
+                placeholder="Año"
+                id="year"
+                class="in-middle"
+              ></base-input>
             </div>
             <div class="col-sm-2 text-center">
-              <button type="submit" class="btn btn-round btn-default">Buscar</button>
+              <button type="submit" class="btn btn-round btn-default">
+                Buscar
+              </button>
             </div>
           </div>
         </card>
@@ -61,10 +80,16 @@
             <!-- <el-divider></el-divider>
             <h4 class="info-labels">ACTIVOS</h4>
             <el-divider></el-divider> -->
-            <el-table :data="queriedData" class="table" style="width: 100%;" :header-cell-class-name="getHeaderClass" :cell-style="cellStyle">
+            <el-table
+              :data="queriedData"
+              class="table"
+              style="width: 100%"
+              :header-cell-class-name="getHeaderClass"
+              :cell-style="cellStyle"
+            >
               <el-table-column
-                v-for="(column, index) in activeColumns"
-                :key="column.label"
+                v-for="column in activeColumns"
+                :key="column.prop || column.label"
                 :min-width="column.minWidth"
                 :prop="column.prop"
                 :label="column.label"
@@ -82,10 +107,16 @@
           <h4 class="info-labels">PASIVOS</h4>
           <el-divider></el-divider> -->
           <div class="table-responsive">
-            <el-table :data="queriedData" class="table" style="width: 100%;" :header-cell-class-name="getHeaderClass" :cell-style="cellStyle">
+            <el-table
+              :data="queriedData"
+              class="table"
+              style="width: 100%"
+              :header-cell-class-name="getHeaderClass"
+              :cell-style="cellStyle"
+            >
               <el-table-column
-                v-for="(column, index) in pasiveColumns"
-                :key="column.label"
+                v-for="column in pasiveColumns"
+                :key="column.prop || column.label"
                 :min-width="column.minWidth"
                 :prop="column.prop"
                 :label="column.label"
@@ -103,16 +134,15 @@
           <h4 class="info-labels">NETO</h4>
           <el-divider></el-divider> -->
           <div class="table-responsive">
-            <el-table :data="transformedData" class="table" style="width: 100%;" :show-header="false" :cell-style="totalStyle">
-              <el-table-column
-                label="Column"
-                prop="column">
-              </el-table-column>
-              <el-table-column
-                label="Value"
-                prop="value"
-              >
-              </el-table-column>
+            <el-table
+              :data="transformedData"
+              class="table"
+              style="width: 100%"
+              :show-header="false"
+              :cell-style="totalStyle"
+            >
+              <el-table-column label="Column" prop="column"> </el-table-column>
+              <el-table-column label="Value" prop="value"> </el-table-column>
             </el-table>
           </div>
         </div>
@@ -125,14 +155,12 @@
 </template>
 <script>
 import { Table, TableColumn, Select, Option, Divider } from "element-ui";
-import { BasePagination } from "src/components";
 import Fuse from "fuse.js";
 import swal from "sweetalert2";
 import { mapGetters, mapActions } from "vuex";
 
 export default {
   components: {
-    BasePagination,
     [Select.name]: Select,
     [Option.name]: Option,
     [Table.name]: Table,
@@ -140,10 +168,7 @@ export default {
     [Divider.name]: Divider,
   },
   computed: {
-    ...mapGetters([
-      "getBalanceData",
-      "getResidentialsList",
-    ]),
+    ...mapGetters(["getBalanceData", "getResidentialsList"]),
     residentialsList() {
       return this.getResidentialsList;
     },
@@ -181,9 +206,11 @@ export default {
       const tableData = [...this.queriedData];
 
       // Calculate sums for each column
-      const sums = { net_balance: this.tableData.reduce((sum, row) => {
+      const sums = {
+        net_balance: this.tableData.reduce((sum, row) => {
           return sum + (row.net_balance || 0); // Sum values for "columnA" only
-      }, 0) };
+        }, 0),
+      };
 
       // Optionally, add a label for the summed row
       sums.label = "Balance Neto";
@@ -194,12 +221,14 @@ export default {
       return tableData;
     },
     lastRowData() {
-      return this.tableDataWithSums.length > 0 ? [this.tableDataWithSums[this.tableDataWithSums.length - 1]] : [];
+      return this.tableDataWithSums.length > 0
+        ? [this.tableDataWithSums[this.tableDataWithSums.length - 1]]
+        : [];
     },
     transformedData() {
       const data = [];
-      this.lastRowData.forEach((row, rowIndex) => {
-        this.totalColumn.forEach((col, colIndex) => {
+      this.lastRowData.forEach((row) => {
+        this.totalColumn.forEach((col) => {
           data.push({
             column: col.label,
             value: `${this.formatCurrency(row[col.prop])}`,
@@ -230,7 +259,7 @@ export default {
           formatter: (row) => {
             return `${this.formatCurrency(row.payments_by_month)}`;
           },
-        }
+        },
       ],
       pasiveColumns: [
         {
@@ -245,14 +274,14 @@ export default {
           formatter: (row) => {
             return `${this.formatCurrency(row.expenses_by_month)}`;
           },
-        }
+        },
       ],
       totalColumn: [
         {
           prop: "net_balance",
           label: "NETO",
           width: 200,
-        }
+        },
       ],
       searchedData: [],
       fuseSearch: null,
@@ -261,8 +290,18 @@ export default {
       residentials: [],
       residentials_list: [],
       months: [
-        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        "Enero",
+        "Febrero",
+        "Marzo",
+        "Abril",
+        "Mayo",
+        "Junio",
+        "Julio",
+        "Agosto",
+        "Septiembre",
+        "Octubre",
+        "Noviembre",
+        "Diciembre",
       ],
       residential_id: [],
     };
@@ -273,11 +312,10 @@ export default {
       let filter_data = {
         residential_id: this.residentials_list,
         month: this.selectedMonth,
-        year: this.selectedYear
+        year: this.selectedYear,
       };
       if (this.residentials_list.length === 0) {
-        swal
-        .fire({
+        swal.fire({
           title: "Favor de seleccionar fraccionamiento.",
           icon: "warning",
           //showCancelButton: true,
@@ -293,7 +331,7 @@ export default {
         this.fetchBalanceData(filter_data);
       }
     },
-    cellStyle({ row, column, rowIndex, columnIndex }) {
+    cellStyle({ column, columnIndex }) {
       const style = {};
 
       style.borderBottom = "unset";
@@ -309,23 +347,23 @@ export default {
       return style;
     },
     getHeaderClass({ columnIndex }) {
-      return columnIndex === 0 ? 'info-labels' : '';
+      return columnIndex === 0 ? "info-labels" : "";
     },
-    totalStyle({ row, column, rowIndex, columnIndex }) {
+    totalStyle({ columnIndex }) {
       const style = {};
 
-      style.borderTop = '1px solid #EBEEF5';
-      style.marginTop = '1.5rem';
+      style.borderTop = "1px solid #EBEEF5";
+      style.marginTop = "1.5rem";
 
       if (columnIndex === 0) {
-        style.fontWeight = 'bold';
-        style.margin = '15px';
-        style.color = '#e14eca !important';
-        style.fontSize = '1.0624999875rem';
+        style.fontWeight = "bold";
+        style.margin = "15px";
+        style.color = "#e14eca !important";
+        style.fontSize = "1.0624999875rem";
       }
 
       if (columnIndex === 1) {
-        style.fontWeight = 'bold';
+        style.fontWeight = "bold";
       }
 
       return style;
@@ -342,9 +380,7 @@ export default {
     this.$store.dispatch("residentialsList");
     this.$store.dispatch("fetchBalanceResidentials");
   },
-  watch: {
-
-  },
+  watch: {},
 };
 </script>
 <style>
@@ -371,7 +407,8 @@ export default {
 .table-responsive {
   margin-bottom: 1rem;
 }
-.table, .el-table table {
+.table,
+.el-table table {
   margin-bottom: none;
 }
 </style>

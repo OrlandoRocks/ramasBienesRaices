@@ -45,7 +45,13 @@
                 </el-input>
               </base-input>
             </div>
-            <el-table :data="queriedData">
+            <div
+              v-if="!loading && tableData.length === 0"
+              class="text-center text-muted py-5"
+            >
+              No hay clientes en tus desarrollos.
+            </div>
+            <el-table v-else :data="queriedData">
               <el-table-column
                 v-for="column in tableColumns"
                 :key="column.label"
@@ -55,7 +61,11 @@
               >
               </el-table-column>
               <el-table-column
-                v-if="$can('clients.show') || $can('clients.update') || $can('clients.destroy')"
+                v-if="
+                  $can('clients.show') ||
+                  $can('clients.update') ||
+                  $can('clients.destroy')
+                "
                 :min-width="160"
                 align="right"
                 label="Actions"
@@ -179,6 +189,7 @@ export default {
       ],
       searchedData: [],
       fuseSearch: null,
+      loading: false,
     };
   },
   computed: {
@@ -262,7 +273,10 @@ export default {
     });
   },
   created() {
-    this.fetchClients();
+    this.loading = true;
+    this.fetchClients().finally(() => {
+      this.loading = false;
+    });
   },
   watch: {
     searchQuery(value) {

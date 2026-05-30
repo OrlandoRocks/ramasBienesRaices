@@ -5,7 +5,7 @@
       <card>
         <template slot="header">
           <div class="d-flex justify-content-between align-items-center">
-            <h4 class="card-title">Mapa de Residenciales</h4>
+            <h4 class="card-title">Plano del fraccionamiento</h4>
             <div class="residential-selector">
               <el-select
                 v-model="selectedResidentialId"
@@ -33,6 +33,8 @@
             :residential-id="selectedResidentialId"
             :key="selectedResidentialId"
             :interactive="false"
+            :zoomable="true"
+            :land-clickable="true"
           ></map-libre-view>
           <div v-else class="map-placeholder">
             <i class="tim-icons icon-map-big"></i>
@@ -227,10 +229,12 @@ export default {
 }
 </style>
 <style>
-.map-container-wrapper .map-container {
+.map-container-wrapper ::v-deep .residential-map-wrap {
   height: 100% !important;
+  min-height: 100% !important;
 }
-.map-container-wrapper .map-libre {
+.map-container-wrapper ::v-deep .residential-map {
   height: 100% !important;
+  min-height: 100% !important;
 }
 </style>

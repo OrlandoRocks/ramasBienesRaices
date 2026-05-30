@@ -210,7 +210,11 @@ export default {
     [Option.name]: Option,
   },
   computed: {
-    ...mapGetters(["getResidentials", "getUsersForSelect", "getResidentialById"]),
+    ...mapGetters([
+      "getResidentials",
+      "getUsersForSelect",
+      "getResidentialById",
+    ]),
     residentialsList() {
       return this.getResidentials;
     },

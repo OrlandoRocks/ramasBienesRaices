@@ -126,7 +126,11 @@ const actions = {
     return new Promise((resolve, reject) => {
       const paymentId = payload.id || payload.payment?.id;
       const normalizedId = paymentId != null ? String(paymentId).trim() : "";
-      if (!normalizedId || normalizedId === "undefined" || normalizedId === "null") {
+      if (
+        !normalizedId ||
+        normalizedId === "undefined" ||
+        normalizedId === "null"
+      ) {
         return reject(new Error("Payment id is required"));
       }
 
@@ -135,19 +139,16 @@ const actions = {
 
       const request = usePatch
         ? paymentsService.patch(normalizedId, paymentBody)
-        : axios.put(
-            `${BASE_URL}/payments/${normalizedId}`,
-            payload,
-            {
-              headers: {
-                Authorization: localStorage.getItem("auth_token"),
-              },
-            }
-          );
+        : axios.put(`${BASE_URL}/payments/${normalizedId}`, payload, {
+            headers: {
+              Authorization: localStorage.getItem("auth_token"),
+            },
+          });
 
       request
         .then((response) => {
-          const formatted = formatPaymentFromApi(response.data) || response.data;
+          const formatted =
+            formatPaymentFromApi(response.data) || response.data;
           commit("setPaymentUpdate", formatted);
           commit("setPayment", formatted);
           resolve(formatted);

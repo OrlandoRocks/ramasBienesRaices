@@ -10,7 +10,8 @@
         {{ paymentSummary.client_name }}
       </p>
       <p class="text-muted mb-0" v-if="paymentSummary.land_code">
-        {{ paymentSummary.residential_name }} — Lote {{ paymentSummary.land_code }}
+        {{ paymentSummary.residential_name }} — Lote
+        {{ paymentSummary.land_code }}
       </p>
     </div>
 
@@ -21,13 +22,16 @@
         </div>
 
         <div class="row form-field-row">
-          <label class="col-sm-3 col-form-label payment-form-label">Estatus</label>
+          <label class="col-sm-3 col-form-label payment-form-label"
+            >Estatus</label
+          >
           <div class="col-sm-8">
             <div class="field-control">
               <el-select
                 v-model="editForm.status"
                 class="select-primary payment-form-select"
                 placeholder="Estatus"
+                :disabled="statusSelectDisabled"
                 @change="handleStatusChange"
               >
                 <el-option
@@ -42,7 +46,9 @@
         </div>
 
         <div class="row form-field-row">
-          <label class="col-sm-3 col-form-label payment-form-label">Cantidad</label>
+          <label class="col-sm-3 col-form-label payment-form-label"
+            >Cantidad</label
+          >
           <div class="col-sm-8">
             <ValidationProvider
               name="cantidad"
@@ -59,13 +65,16 @@
               />
             </ValidationProvider>
             <small class="text-muted field-hint">
-              Si cambia el monto, el siguiente pago pendiente se ajustará automáticamente.
+              Si cambia el monto, el siguiente pago pendiente se ajustará
+              automáticamente.
             </small>
           </div>
         </div>
 
         <div class="row form-field-row">
-          <label class="col-sm-3 col-form-label payment-form-label">Fecha de pago</label>
+          <label class="col-sm-3 col-form-label payment-form-label"
+            >Fecha de pago</label
+          >
           <div class="col-sm-8">
             <div class="field-control">
               <el-date-picker
@@ -80,7 +89,9 @@
         </div>
 
         <div v-if="showPaidFields" class="row form-field-row">
-          <label class="col-sm-3 col-form-label payment-form-label">Tipo de pago</label>
+          <label class="col-sm-3 col-form-label payment-form-label"
+            >Tipo de pago</label
+          >
           <div class="col-sm-8">
             <ValidationProvider
               name="tipo"
@@ -97,14 +108,18 @@
         </div>
 
         <div v-if="showPaidFields" class="row form-field-row">
-          <label class="col-sm-3 col-form-label payment-form-label">Comentarios</label>
+          <label class="col-sm-3 col-form-label payment-form-label"
+            >Comentarios</label
+          >
           <div class="col-sm-8">
             <base-input v-model="editForm.comments" type="textarea" />
           </div>
         </div>
 
         <div v-if="showPaidFields" class="row form-field-row">
-          <label class="col-sm-3 col-form-label payment-form-label">Comprobante (URL)</label>
+          <label class="col-sm-3 col-form-label payment-form-label"
+            >Comprobante (URL)</label
+          >
           <div class="col-sm-8">
             <ValidationProvider
               name="imagen"
@@ -118,8 +133,12 @@
                 :class="[{ 'has-success': passed }, { 'has-danger': failed }]"
               />
             </ValidationProvider>
-            <small v-if="editForm.status === 'Pagado'" class="text-muted field-hint">
-              Se recomienda adjuntar comprobante cuando el pago está marcado como Pagado.
+            <small
+              v-if="editForm.status === 'Pagado'"
+              class="text-muted field-hint"
+            >
+              Se recomienda adjuntar comprobante cuando el pago está marcado
+              como Pagado.
             </small>
           </div>
         </div>
@@ -217,6 +236,16 @@ export default {
     submitLabel() {
       return this.captureMode ? "Capturar pago" : "Guardar cambios";
     },
+    isSellerCaptureOnly() {
+      return (
+        this.captureMode &&
+        this.$can("payments.capture") &&
+        !this.$can("payments.update")
+      );
+    },
+    statusSelectDisabled() {
+      return this.isSellerCaptureOnly;
+    },
   },
   watch: {
     paymentId: {
@@ -250,7 +279,10 @@ export default {
       if (this.initialPayment.payment_date) {
         this.editForm.payment_date = this.initialPayment.payment_date;
       }
-      if (this.initialPayment.payment_status_name || this.initialPayment.status) {
+      if (
+        this.initialPayment.payment_status_name ||
+        this.initialPayment.status
+      ) {
         this.editForm.status =
           this.initialPayment.payment_status_name || this.initialPayment.status;
       }
@@ -285,10 +317,11 @@ export default {
       }
     },
     buildPayload() {
+      const status = this.isSellerCaptureOnly ? "Pagado" : this.editForm.status;
       const payload = {
         amount: this.editForm.amount,
         payment_date: this.editForm.payment_date || null,
-        status: this.editForm.status,
+        status,
         payment_type: this.editForm.payment_type || "",
         comments: this.editForm.comments || "",
         image_url: this.editForm.image_url || "",
@@ -311,8 +344,7 @@ export default {
       }
       const result = await swalAboveDialog.fire({
         title: "¿Marcar como Pendiente?",
-        text:
-          "Se borrarán el tipo de pago, comentarios y comprobante asociados a este pago.",
+        text: "Se borrarán el tipo de pago, comentarios y comprobante asociados a este pago.",
         icon: "warning",
         showCancelButton: true,
         confirmButtonText: "Sí, continuar",
@@ -326,7 +358,9 @@ export default {
       return Boolean(result.value);
     },
     async submit() {
-      const permission = this.captureMode ? "payments.capture" : "payments.update";
+      const permission = this.captureMode
+        ? "payments.capture"
+        : "payments.update";
       if (!this.$can(permission)) {
         this.$notify({
           title: "Sin permiso",

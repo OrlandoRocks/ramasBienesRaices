@@ -1,7 +1,16 @@
 import axios from "axios";
 import router from "@/router/router";
+import { normalizeResidentialFromApi } from "@/util/residentialApi";
 
 const BASE_URL = process.env.VUE_APP_BACKEND_URL;
+
+function authConfig() {
+  return {
+    headers: {
+      Authorization: localStorage.getItem("auth_token"),
+    },
+  };
+}
 
 const state = {
   residentials: [],
@@ -9,8 +18,11 @@ const state = {
     id: "",
     name: "",
     address: "",
+    user_ids: [],
+    assigned_users: [],
     user_id: "",
     user_name: "",
+    assignees_label: "",
     lands_count: "",
     lands: [],
     total_expenses: "",
@@ -29,125 +41,71 @@ const getters = {
 
 const actions = {
   fetchResidentials({ commit }) {
-    const config = {
-      headers: {
-        Authorization: localStorage.getItem("auth_token"),
-      },
-    };
-    axios
-      .get(`${BASE_URL}/residentials`, config)
+    return axios
+      .get(`${BASE_URL}/residentials`, authConfig())
       .then((response) => {
-        const formatedResidentials = response.data.map((residential) => {
-          return {
-            id: residential.id,
-            name: residential.name,
-            address: residential.address,
-            user_id: residential.user_id,
-            user_name: residential.user_full_name,
-            lands_count: residential.lands_count,
-            total_expenses: residential.total_expenses,
-            cost: residential.cost,
-          };
-        });
-        commit("setResidentials", formatedResidentials);
+        const formatted = (response.data || []).map(
+          normalizeResidentialFromApi
+        );
+        commit("setResidentials", formatted);
+        return formatted;
       })
       .catch((error) => {
         console.error(error);
+        throw error;
       });
   },
   fetchResidentialById({ commit }, id) {
-    return new Promise((resolve, reject) => {
-      const config = {
-        headers: {
-          Authorization: localStorage.getItem("auth_token"),
-        },
-      };
-      axios
-        .get(`${BASE_URL}/residentials/${id}`, config)
-        .then((response) => {
-          const formatedResidential = {
-            id: response.data.id,
-            name: response.data.name,
-            address: response.data.address,
-            user_id: response.data.user_id,
-            user_name: response.data.user_full_name,
-            lands_count: response.data.lands_count,
-            lands: response.data.lands,
-            total_expenses: response.data.total_expenses,
-            cost: response.data.cost,
-          };
-          commit("setResidential", formatedResidential);
-          resolve(formatedResidential);
-        })
-        .catch((error) => {
-          console.error(error);
-          reject(error);
-        });
-    });
+    return axios
+      .get(`${BASE_URL}/residentials/${id}`, authConfig())
+      .then((response) => {
+        const formatted = normalizeResidentialFromApi(response.data);
+        commit("setResidential", formatted);
+        return formatted;
+      })
+      .catch((error) => {
+        console.error(error);
+        throw error;
+      });
   },
-  // eslint-disable-next-line no-empty-pattern
-  createResidential({}, payload) {
-    const config = {
-      headers: {
-        Authorization: localStorage.getItem("auth_token"),
-      },
-    };
-    return new Promise((resolve, reject) => {
-      axios
-        .post(`${BASE_URL}/residentials`, payload, config)
-        .then((response) => {
-          state.residentials.push(response.data);
-          router.push("/residentials");
-          resolve(response);
-        })
-        .catch((error) => {
-          console.error(error);
-          reject(error);
-        });
-    });
+  createResidential(_, payload) {
+    return axios
+      .post(`${BASE_URL}/residentials`, payload, authConfig())
+      .then((response) => {
+        router.push("/residentials");
+        return normalizeResidentialFromApi(response.data);
+      })
+      .catch((error) => {
+        console.error(error);
+        throw error;
+      });
   },
   updateResidential({ commit }, payload) {
-    const config = {
-      headers: {
-        Authorization: localStorage.getItem("auth_token"),
-      },
-    };
-    return new Promise((resolve, reject) => {
-      axios
-        .put(
-          `${BASE_URL}/residentials/${payload.residential.id}`,
-          payload,
-          config
-        )
-        .then((response) => {
-          commit("setResidentialsUpdate", response.data);
-          router.push("/residentials");
-          resolve(response);
-        })
-        .catch((error) => {
-          console.error(error);
-          reject(error);
-        });
-    });
+    const id = payload.residential?.id;
+    return axios
+      .patch(`${BASE_URL}/residentials/${id}`, payload, authConfig())
+      .then((response) => {
+        const formatted = normalizeResidentialFromApi(response.data);
+        commit("setResidentialsUpdate", formatted);
+        router.push("/residentials");
+        return formatted;
+      })
+      .catch((error) => {
+        console.error(error);
+        throw error;
+      });
   },
   deleteResidential({ commit }, id) {
-    const config = {
-      headers: {
-        Authorization: localStorage.getItem("auth_token"),
-      },
-    };
-    return new Promise((resolve, reject) => {
-      axios
-        .delete(`${BASE_URL}/residentials/${id}`, config)
-        .then((response) => {
-          commit("deleteResidential", id);
-          resolve(response);
-        })
-        .catch((error) => {
-          console.error(error);
-          reject(error);
-        });
-    });
+    return axios
+      .delete(`${BASE_URL}/residentials/${id}`, authConfig())
+      .then((response) => {
+        commit("deleteResidential", id);
+        return response;
+      })
+      .catch((error) => {
+        console.error(error);
+        throw error;
+      });
   },
 };
 
@@ -160,14 +118,16 @@ const mutations = {
   },
   setResidentialsUpdate(state, residential) {
     const index = state.residentials.findIndex(
-      (element) => element.id === residential.id
+      (element) => String(element.id) === String(residential.id)
     );
     if (index !== -1) {
       state.residentials.splice(index, 1, residential);
     }
   },
   deleteResidential(state, id) {
-    const index = state.residentials.findIndex((element) => element.id === id);
+    const index = state.residentials.findIndex(
+      (element) => String(element.id) === String(id)
+    );
     if (index !== -1) {
       state.residentials.splice(index, 1);
     }

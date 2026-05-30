@@ -75,7 +75,10 @@ router.beforeEach((to, from, next) => {
     next();
   };
 
-  if (hasToken && (requiresAuth || to.name === "Login" || to.name === "Register")) {
+  if (
+    hasToken &&
+    (requiresAuth || to.name === "Login" || to.name === "Register")
+  ) {
     ensureProfileLoaded()
       .then((user) => proceed(user))
       .catch(() => next({ name: "Login" }));

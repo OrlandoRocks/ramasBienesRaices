@@ -183,7 +183,9 @@ export default {
       };
       this.registerUser(data)
         .then(() => {
-          this.$router.push(getDefaultRouteForUser(this.$store.getters.currentUser));
+          this.$router.push(
+            getDefaultRouteForUser(this.$store.getters.currentUser)
+          );
         })
         .catch(() => {});
       this.resetData();

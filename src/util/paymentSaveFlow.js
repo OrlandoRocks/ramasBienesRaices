@@ -20,8 +20,7 @@ function formatCurrency(amount) {
 async function confirmPagadoToPendiente() {
   const result = await swalAboveDialog.fire({
     title: "¿Marcar como Pendiente?",
-    text:
-      "Se borrarán el tipo de pago, comentarios y comprobante asociados a este pago.",
+    text: "Se borrarán el tipo de pago, comentarios y comprobante asociados a este pago.",
     icon: "warning",
     showCancelButton: true,
     confirmButtonText: "Sí, continuar",
@@ -38,9 +37,9 @@ async function confirmPagadoToPendiente() {
 async function confirmGeneralSave({ captureMode, payload }) {
   const result = await swalAboveDialog.fire({
     title: captureMode ? "¿Capturar este pago?" : "¿Guardar cambios?",
-    html: `Monto: <strong>${formatCurrency(payload.amount)}</strong><br/>Fecha: <strong>${
-      payload.payment_date || "—"
-    }</strong>`,
+    html: `Monto: <strong>${formatCurrency(
+      payload.amount
+    )}</strong><br/>Fecha: <strong>${payload.payment_date || "—"}</strong>`,
     icon: "warning",
     showCancelButton: true,
     confirmButtonText: captureMode ? "Sí, capturar" : "Sí, guardar",

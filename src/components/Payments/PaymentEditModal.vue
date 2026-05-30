@@ -62,9 +62,7 @@ export default {
           ? `Capturar pago #${this.paymentId}`
           : "Capturar pago";
       }
-      return this.paymentId
-        ? `Editar pago #${this.paymentId}`
-        : "Editar pago";
+      return this.paymentId ? `Editar pago #${this.paymentId}` : "Editar pago";
     },
   },
   methods: {

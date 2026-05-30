@@ -80,7 +80,7 @@
                 v-model="land_id"
               >
                 <el-option
-                  v-for="option in filteredLands"
+                  v-for="option in landSelectOptions"
                   class="select-primary"
                   :value="option.id"
                   :label="`${option.land_code} - ${option.address}`"
@@ -124,6 +124,7 @@ import { extend } from "vee-validate";
 import { required, numeric, email } from "vee-validate/dist/rules";
 import { Option, Select } from "element-ui";
 import { mapGetters } from "vuex";
+import { landHasNoContract, sameResidentialId } from "@/util/landHelpers";
 
 extend("email", email);
 extend("required", required);
@@ -151,18 +152,44 @@ export default {
       return this.getResidentials;
     },
     findLand() {
-      let selected_land = this.getLands.find(
-        (land) => land.id === this.land_id
-      );
-      this.$store.commit("setLand", selected_land);
-      return selected_land;
+      const selectedId = Number(this.land_id);
+      const selected_land =
+        this.getLands.find((land) => Number(land.id) === selectedId) ||
+        (Number(this.getLandById?.id) === selectedId ? this.getLandById : null);
+      if (selected_land) {
+        this.$store.commit("setLand", selected_land);
+      }
+      return selected_land || {};
     },
     filteredLands() {
+      if (this.residential_id === "" || this.residential_id == null) {
+        return [];
+      }
       return this.getLands.filter(
-        (land) => land.residential_id === this.residential_id
-      ).filter(
-          (land) => land.contract_id == "no"
+        (land) =>
+          sameResidentialId(land.residential_id, this.residential_id) &&
+          landHasNoContract(land)
       );
+    },
+    landSelectOptions() {
+      const options = this.filteredLands;
+      const selectedId = Number(this.land_id);
+      if (!selectedId) {
+        return options;
+      }
+      if (options.some((land) => Number(land.id) === selectedId)) {
+        return options;
+      }
+      const selected = this.getLandById;
+      if (
+        selected &&
+        Number(selected.id) === selectedId &&
+        sameResidentialId(selected.residential_id, this.residential_id) &&
+        landHasNoContract(selected)
+      ) {
+        return [...options, selected];
+      }
+      return options;
     },
     clientList() {
       return this.getClients;
@@ -182,26 +209,41 @@ export default {
         return res;
       });
     },
-    applyRoutePrefill() {
+    async applyRoutePrefill() {
       const { land_id, residential_id } = this.$route.query;
       if (residential_id) {
         const rid = parseInt(residential_id, 10);
         this.residential_id = Number.isNaN(rid) ? residential_id : rid;
       }
-      if (land_id) {
-        const lid = parseInt(land_id, 10);
-        this.land_id = Number.isNaN(lid) ? land_id : lid;
+      if (!land_id) {
+        return;
+      }
+      const lid = parseInt(land_id, 10);
+      this.land_id = Number.isNaN(lid) ? land_id : lid;
+
+      const inList = this.getLands.some(
+        (land) => Number(land.id) === Number(this.land_id)
+      );
+      if (inList) {
+        return;
+      }
+      try {
+        const land = await this.$store.dispatch("fetchLandById", this.land_id);
+        if (!this.residential_id && land.residential_id != null) {
+          this.residential_id = land.residential_id;
+        }
+      } catch (error) {
+        console.error(error);
       }
     },
   },
-  mounted() {
-    Promise.all([
+  async mounted() {
+    await Promise.allSettled([
       this.$store.dispatch("fetchResidentials"),
       this.$store.dispatch("fetchLands"),
       this.$store.dispatch("fetchClients"),
-    ]).then(() => {
-      this.applyRoutePrefill();
-    });
+    ]);
+    await this.applyRoutePrefill();
   },
 };
 </script>

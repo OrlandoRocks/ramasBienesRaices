@@ -60,10 +60,7 @@ function mapLandFromContractResponse(land) {
   if (!land) {
     return null;
   }
-  const residentialName =
-    land.residential_name ||
-    land.residential?.name ||
-    "";
+  const residentialName = land.residential_name || land.residential?.name || "";
   return {
     id: land.id,
     land_code: land.land_code || "",
@@ -178,30 +175,32 @@ const actions = {
             commit("setLand", mappedLand);
           }
 
-          return fetchContractPaymentsFromApi(id, config).then((normalizedPayments) => {
-            commit("setContract", {
-              id: contract.id,
-              client_id: contract.client_id,
-              land_id: contract.land_id,
-              contract_date: contract.contract_date,
-              contract_type: contract.contract_type,
-              down_payment: contract.down_payment,
-              monthly_payment: contract.monthly_payment,
-              total_price: contract.total_price,
-              payments: normalizedPayments,
-              total_paid: contract.total_paid,
-              yearly_payment: contract.yearly_payment,
-              months: contract.months,
-              penalty_interest: contract.penalty_interest,
-              extraordinary_payment: contract.extraordinary_payment,
-            });
-            resolve({
-              ...contract,
-              client: mappedClient || contract.client,
-              land: mappedLand || contract.land,
-              payments: normalizedPayments,
-            });
-          });
+          return fetchContractPaymentsFromApi(id, config).then(
+            (normalizedPayments) => {
+              commit("setContract", {
+                id: contract.id,
+                client_id: contract.client_id,
+                land_id: contract.land_id,
+                contract_date: contract.contract_date,
+                contract_type: contract.contract_type,
+                down_payment: contract.down_payment,
+                monthly_payment: contract.monthly_payment,
+                total_price: contract.total_price,
+                payments: normalizedPayments,
+                total_paid: contract.total_paid,
+                yearly_payment: contract.yearly_payment,
+                months: contract.months,
+                penalty_interest: contract.penalty_interest,
+                extraordinary_payment: contract.extraordinary_payment,
+              });
+              resolve({
+                ...contract,
+                client: mappedClient || contract.client,
+                land: mappedLand || contract.land,
+                payments: normalizedPayments,
+              });
+            }
+          );
         })
         .catch((error) => {
           console.error(error);
