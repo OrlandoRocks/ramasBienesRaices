@@ -46,11 +46,7 @@
                 label="Fraccionamiento"
                 min-width="140"
               />
-              <el-table-column
-                prop="land_code"
-                label="Lote"
-                min-width="90"
-              />
+              <el-table-column prop="land_code" label="Lote" min-width="90" />
               <el-table-column label="Monto" min-width="110">
                 <template slot-scope="{ row }">
                   {{ formatCurrency(row.amount) }}

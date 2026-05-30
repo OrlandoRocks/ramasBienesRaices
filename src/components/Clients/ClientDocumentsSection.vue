@@ -2,12 +2,20 @@
   <card class="client-documents-section">
     <h4 slot="header" class="card-title">Documentos KYC</h4>
     <div class="card-body">
+      <p v-if="readOnlyVerification" class="text-muted small mb-3">
+        Puedes subir documentos pendientes o rechazados. Los documentos
+        <strong>aprobados</strong> no se pueden cambiar. Si subes un archivo
+        nuevo tras un rechazo, volverá a estado <strong>Pendiente</strong> para
+        revisión.
+      </p>
       <div
         v-for="doc in CLIENT_DOCUMENTS"
         :key="doc.key"
         class="document-row mb-4 pb-3 border-bottom"
       >
-        <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+        <div
+          class="d-flex flex-wrap align-items-center justify-content-between mb-2"
+        >
           <h5 class="mb-0">{{ doc.label }}</h5>
           <span
             class="badge"
@@ -17,7 +25,10 @@
           </span>
         </div>
 
-        <div v-if="documentMeta(doc).attached" class="document-meta text-muted mb-2">
+        <div
+          v-if="documentMeta(doc).attached"
+          class="document-meta text-muted mb-2"
+        >
           <div>
             <strong>Archivo:</strong>
             {{ documentMeta(doc).filename || "—" }}
@@ -27,14 +38,9 @@
             {{ formatDocumentByteSize(documentMeta(doc).byte_size) }}
           </div>
         </div>
-        <p v-else class="text-muted mb-2">
-          Sin archivo — sube {{ doc.label }}
-        </p>
+        <p v-else class="text-muted mb-2">Sin archivo — sube {{ doc.label }}</p>
 
-        <div
-          v-if="localPreviewUrl(doc)"
-          class="document-preview mb-2"
-        >
+        <div v-if="localPreviewUrl(doc)" class="document-preview mb-2">
           <img
             :src="localPreviewUrl(doc)"
             :alt="doc.label"
@@ -66,9 +72,9 @@
           </base-button>
         </div>
 
-        <div v-if="editable && canUpload" class="mt-2">
+        <div v-if="canUploadDocument(doc)" class="mt-2">
           <label class="btn btn-default btn-sm btn-file mb-0">
-            {{ pendingFileName(doc) ? "Cambiar archivo" : "Seleccionar archivo" }}
+            {{ uploadButtonLabel(doc) }}
             <input
               type="file"
               class="d-none"
@@ -78,6 +84,9 @@
           </label>
           <small v-if="pendingFileName(doc)" class="d-block text-muted mt-1">
             Seleccionado: {{ pendingFileName(doc) }}
+            <span v-if="isRejected(doc)">
+              — se enviará a revisión al guardar</span
+            >
           </small>
           <small v-else class="d-block text-muted mt-1">
             PDF, JPG o PNG — máximo 10 MB
@@ -86,6 +95,23 @@
             {{ fieldErrors[doc.param] }}
           </p>
         </div>
+        <p
+          v-else-if="readOnlyVerification && isApproved(doc)"
+          class="text-muted small mt-2 mb-0"
+        >
+          <i class="tim-icons icon-lock-circle"></i>
+          Documento aprobado — no puede modificarse.
+        </p>
+        <p
+          v-else-if="
+            readOnlyVerification &&
+            isRejected(doc) &&
+            !documentMeta(doc).attached
+          "
+          class="text-warning small mt-2 mb-0"
+        >
+          Documento rechazado — sube un nuevo archivo para reenviar a revisión.
+        </p>
 
         <div
           v-if="editable && canVerify && showVerificationSelect(doc)"
@@ -147,6 +173,11 @@ export default {
       type: Boolean,
       default: false,
     },
+    /** Show status badge only; hide staff verification dropdown. */
+    readOnlyVerification: {
+      type: Boolean,
+      default: false,
+    },
     pendingFiles: {
       type: Object,
       default: () => ({}),
@@ -171,13 +202,17 @@ export default {
   },
   computed: {
     canUpload() {
-      return this.$can("clients.create") || this.$can("clients.update");
+      return (
+        this.$can("clients.create") ||
+        this.$can("clients.update") ||
+        this.$can("clients.profile.update")
+      );
     },
     canDownload() {
-      return this.$can("clients.show");
+      return this.$can("clients.show") || this.$can("clients.profile.view");
     },
     canVerify() {
-      return this.$can("clients.update");
+      return this.$can("clients.update") && !this.readOnlyVerification;
     },
     documents() {
       return this.client?.documents || emptyDocumentsPayload();
@@ -201,7 +236,39 @@ export default {
   methods: {
     formatDocumentByteSize,
     documentMeta(doc) {
-      return this.documents[doc.key] || { attached: false, verification_status: "pending" };
+      return (
+        this.documents[doc.key] || {
+          attached: false,
+          verification_status: "pending",
+        }
+      );
+    },
+    documentStatus(doc) {
+      return this.documentMeta(doc).verification_status || "pending";
+    },
+    isApproved(doc) {
+      return this.documentStatus(doc) === "approved";
+    },
+    isRejected(doc) {
+      return this.documentStatus(doc) === "rejected";
+    },
+    canReplaceDocument(doc) {
+      if (!this.readOnlyVerification) {
+        return true;
+      }
+      return !this.isApproved(doc);
+    },
+    canUploadDocument(doc) {
+      return this.editable && this.canUpload && this.canReplaceDocument(doc);
+    },
+    uploadButtonLabel(doc) {
+      if (this.pendingFileName(doc)) {
+        return "Cambiar archivo";
+      }
+      if (this.isRejected(doc)) {
+        return "Subir nuevo archivo";
+      }
+      return "Seleccionar archivo";
     },
     statusLabel(status) {
       return VERIFICATION_STATUS_LABELS[status] || status || "—";
@@ -229,6 +296,14 @@ export default {
       const file = event.target.files?.[0] || null;
       event.target.value = "";
       if (!file) {
+        return;
+      }
+      if (!this.canReplaceDocument(doc)) {
+        this.$notify({
+          title: "Documento bloqueado",
+          type: "warning",
+          message: "No puedes modificar un documento que ya fue aprobado.",
+        });
         return;
       }
       const error = validateClientDocumentFile(file, doc);
@@ -262,7 +337,9 @@ export default {
       if (!id) {
         throw new Error("Cliente sin identificador");
       }
-      const response = await downloadClientDocument(id, doc.key, { disposition });
+      const response = await downloadClientDocument(id, doc.key, {
+        disposition,
+      });
       const contentType =
         response.headers["content-type"] || "application/octet-stream";
       return new Blob([response.data], { type: contentType });

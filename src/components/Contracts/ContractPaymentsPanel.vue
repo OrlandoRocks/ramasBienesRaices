@@ -187,8 +187,7 @@ export default {
     },
     canCapturePayment(row) {
       return (
-        this.$can("payments.capture") &&
-        row.payment_status_name === "Pendiente"
+        this.$can("payments.capture") && row.payment_status_name === "Pendiente"
       );
     },
     openEditPayment(row) {

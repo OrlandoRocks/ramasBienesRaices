@@ -1,4 +1,11 @@
-import { emptyUser, normalizeUser } from "@/util/userSession";
+import { normalizeUser } from "@/util/userSession";
+
+export {
+  ROLE,
+  canManageResidentialAssignments,
+  canManageClientResidentialLinks,
+  canManageUserResidentialAssignments,
+} from "@/util/assignmentHelpers";
 
 /** Super user and admin get full UI access (routes, sidebar, action icons). */
 export function hasFullAccess(user) {
@@ -38,6 +45,9 @@ const RULES = {
   "clients.create": (u) => u.isStaff,
   "clients.update": (u) => u.isStaff,
   "clients.destroy": (u) => u.isStaff,
+  /** Client portal: view and edit own profile + KYC uploads (not verification status). */
+  "clients.profile.view": (u) => u.isClient && Boolean(u.clientId),
+  "clients.profile.update": (u) => u.isClient && Boolean(u.clientId),
 
   "contracts.index": (u) => u.isStaff || u.isSeller || u.isClient,
   "contracts.show": (u) => u.isStaff || u.isSeller || u.isClient,
@@ -50,7 +60,8 @@ const RULES = {
   "payments.show": (u) => u.isStaff || u.isSeller || u.isClient,
   "payments.create": (u) => canRecordPayments(u) || u.isSeller,
   "payments.update": (u) => canRecordPayments(u),
-  "payments.capture": (u) => canRecordPayments(u),
+  /** Record pending → Pagado on assigned developments (sellers use PATCH; staff full update). */
+  "payments.capture": (u) => canRecordPayments(u) || u.isSeller,
   "payments.destroy": (u) => canRecordPayments(u),
 
   "expenses.index": (u) => !u.isClient,
@@ -133,7 +144,7 @@ export const ROUTE_PERMISSIONS = {
   ResidentialDashboard: "residentials.show",
   Lands: "lands.index",
   CreateLand: "lands.create",
-  EditLand: ["lands.update", "payments.capture"],
+  EditLand: ["lands.update", "lands.show"],
   Clients: "clients.index",
   CreateClient: "clients.create",
   EditClient: "clients.update",
@@ -148,6 +159,7 @@ export const ROUTE_PERMISSIONS = {
   EditPayment: ["payments.update", "payments.capture"],
   BalanceHome: "balance.view",
   ClientPortal: "contracts.index",
+  ClientProfile: "clients.profile.view",
   Users: "users.manage",
   CreateUser: "users.manage",
   EditUser: "users.manage",
@@ -209,6 +221,14 @@ export const SIDEBAR_LINKS = [
     path: "/portal",
     routeName: "ClientPortal",
     permission: "contracts.index",
+    clientOnly: true,
+  },
+  {
+    name: "Mi perfil",
+    icon: "tim-icons icon-single-02",
+    path: "/portal/profile",
+    routeName: "ClientProfile",
+    permission: "clients.profile.view",
     clientOnly: true,
   },
   {
@@ -361,7 +381,8 @@ export function filterSidebarLinks(user, translate) {
     }
     return can(u, link.permission);
   }).map((link) => ({
-    name: link.name || (link.nameKey && translate(link.nameKey)) || link.routeName,
+    name:
+      link.name || (link.nameKey && translate(link.nameKey)) || link.routeName,
     icon: link.icon,
     path: link.path,
   }));

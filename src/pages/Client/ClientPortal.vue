@@ -5,6 +5,12 @@
       <p class="text-center text-muted">
         Consulta tu contrato y el estado de tus pagos.
       </p>
+      <div class="text-center mt-3">
+        <base-button type="default" size="sm" @click="goToProfile">
+          <i class="tim-icons icon-single-02"></i>
+          Mi perfil y documentos
+        </base-button>
+      </div>
     </div>
 
     <div v-if="loading" class="text-center py-5">
@@ -30,9 +36,7 @@
             </span>
           </h4>
           <div class="card-body">
-            <p>
-              <b>Fecha:</b> {{ contract.contract_date || "—" }}
-            </p>
+            <p><b>Fecha:</b> {{ contract.contract_date || "—" }}</p>
             <p>
               <b>Mensualidad:</b>
               {{ formatCurrency(contract.monthly_payment) }}
@@ -95,12 +99,14 @@ export default {
         });
     },
     contractLandLabel(contract) {
-      const address =
-        contract.land_address || contract.land?.address || "";
+      const address = contract.land_address || contract.land?.address || "";
       return String(address).trim();
     },
     openContract(id) {
       this.$router.push({ name: "ShowContract", params: { id } });
+    },
+    goToProfile() {
+      this.$router.push({ name: "ClientProfile" });
     },
   },
 };

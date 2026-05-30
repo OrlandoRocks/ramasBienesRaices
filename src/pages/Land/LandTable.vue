@@ -74,14 +74,18 @@
                 </template>
               </el-table-column>
               <el-table-column
-                v-if="$can('lands.update') || $can('lands.destroy') || $can('payments.capture')"
+                v-if="
+                  $can('lands.update') ||
+                  $can('lands.destroy') ||
+                  $can('lands.show')
+                "
                 :min-width="135"
                 align="right"
                 label="Actions"
               >
                 <div slot-scope="props">
                   <base-button
-                    v-if="$can('lands.update') || $can('payments.capture')"
+                    v-if="$can('lands.update') || $can('lands.show')"
                     @click.native="handleEdit(props.$index, props.row)"
                     class="edit btn-link"
                     type="warning"

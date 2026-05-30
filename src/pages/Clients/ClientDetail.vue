@@ -18,7 +18,9 @@
             <p><b>Dirección:</b> {{ client.address || "—" }}</p>
           </div>
           <div class="col-md-6">
-            <p><b>Ciudad:</b> {{ client.city || "—" }}, {{ client.state || "—" }}</p>
+            <p>
+              <b>Ciudad:</b> {{ client.city || "—" }}, {{ client.state || "—" }}
+            </p>
             <p><b>Código:</b> {{ client.code || "—" }}</p>
           </div>
         </div>

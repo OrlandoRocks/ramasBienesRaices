@@ -22,7 +22,10 @@ export function buildClientFormData(
   if (requireDocuments) {
     form.append("client[require_documents]", "true");
   }
-  Object.entries(clientPayload || {}).forEach(([key, value]) => {
+  const { residential_ids: residentialIds, ...scalarFields } =
+    clientPayload || {};
+
+  Object.entries(scalarFields).forEach(([key, value]) => {
     if (value === undefined || value === null) {
       return;
     }
@@ -32,6 +35,12 @@ export function buildClientFormData(
     }
     form.append(`client[${key}]`, value);
   });
+
+  if (Array.isArray(residentialIds)) {
+    residentialIds.forEach((id) => {
+      form.append("client[residential_ids][]", id);
+    });
+  }
   Object.entries(files).forEach(([param, file]) => {
     if (file) {
       form.append(`client[${param}]`, file);

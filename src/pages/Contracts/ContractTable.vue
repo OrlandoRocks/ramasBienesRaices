@@ -188,7 +188,9 @@ export default {
   computed: {
     ...mapGetters(["getContracts"]),
     filteredColumns() {
-      return this.tableColumns.filter(column => column.type!== 'currency' || column.type === 'currency');
+      return this.tableColumns.filter(
+        (column) => column.type !== "currency" || column.type === "currency"
+      );
     },
     tableData() {
       return this.getContracts;

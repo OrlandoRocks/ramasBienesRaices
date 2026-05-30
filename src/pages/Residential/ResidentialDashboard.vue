@@ -4,13 +4,15 @@
       <div class="col-12">
         <card>
           <template slot="header">
-            <h4 class="card-title">Mapa de {{ residential.name }}</h4>
+            <h4 class="card-title">
+              Plano del fraccionamiento — {{ residential.name }}
+            </h4>
           </template>
           <div class="map-container-wrapper">
-            <map-libre-view
+            <residential-map
               v-if="residential.id"
               :residential-id="residential.id"
-            ></map-libre-view>
+            />
           </div>
         </card>
       </div>
@@ -50,13 +52,13 @@
 
 <script>
 import { mapActions, mapGetters } from "vuex";
-import MapLibreView from "@/components/Maps/MapLibreView";
+import ResidentialMap from "@/components/Maps/ResidentialMap.vue";
 import StatsCard from "@/components/Cards/StatsCard";
 
 export default {
   name: "ResidentialDashboard",
   components: {
-    MapLibreView,
+    ResidentialMap,
     StatsCard,
   },
   data() {

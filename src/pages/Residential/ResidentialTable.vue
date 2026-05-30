@@ -45,7 +45,13 @@
                 </el-input>
               </base-input>
             </div>
-            <el-table :data="queriedData">
+            <div
+              v-if="!loading && tableData.length === 0"
+              class="text-center text-muted py-5"
+            >
+              No tienes desarrollos asignados.
+            </div>
+            <el-table v-else :data="queriedData">
               <el-table-column
                 v-for="column in tableColumns"
                 :key="column.label"
@@ -184,7 +190,8 @@ export default {
         total: 0,
       },
       searchQuery: "",
-      propsToSearch: ["name", "address", "user_name"],
+      loading: false,
+      propsToSearch: ["name", "address", "assignees_label"],
       tableColumns: [
         {
           prop: "name",
@@ -197,9 +204,9 @@ export default {
           minWidth: 250,
         },
         {
-          prop: "user_name",
-          label: "Responsable",
-          minWidth: 120,
+          prop: "assignees_label",
+          label: "Personal asignado",
+          minWidth: 180,
         },
         {
           prop: "lands_count",
@@ -290,12 +297,15 @@ export default {
   },
   mounted() {
     this.fuseSearch = new Fuse(this.getResidentials, {
-      keys: ["name", "address", "user_name"],
+      keys: ["name", "address", "assignees_label"],
       threshold: 0.3,
     });
   },
   created() {
-    this.$store.dispatch("fetchResidentials");
+    this.loading = true;
+    this.fetchResidentials().finally(() => {
+      this.loading = false;
+    });
   },
   watch: {
     searchQuery(value) {

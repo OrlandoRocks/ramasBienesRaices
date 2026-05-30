@@ -28,8 +28,7 @@
                       { 'has-success': passed },
                       { 'has-danger': failed },
                     ]"
-                  >
-                  </base-input>
+                  />
                 </ValidationProvider>
               </div>
             </div>
@@ -50,8 +49,7 @@
                       { 'has-success': passed },
                       { 'has-danger': failed },
                     ]"
-                  >
-                  </base-input>
+                  />
                 </ValidationProvider>
               </div>
             </div>
@@ -72,41 +70,55 @@
                       { 'has-success': passed },
                       { 'has-danger': failed },
                     ]"
-                  >
-                  </base-input>
+                  />
                 </ValidationProvider>
               </div>
             </div>
 
-            <div class="row">
-              <label class="col-sm-2 col-form-label">Responsable</label>
+            <div class="row" v-if="canManageAssignments">
+              <label class="col-sm-2 col-form-label">Personal asignado</label>
               <div class="col-sm-7">
-                <ValidationProvider
-                  name="responsable"
-                  rules="required"
-                  v-slot="{ errors }"
+                <el-select
+                  class="select-primary"
+                  style="width: 100%; margin-bottom: 10px"
+                  size="large"
+                  v-model="user_ids"
+                  multiple
+                  filterable
+                  collapse-tags
+                  placeholder="Selecciona personal"
+                  :disabled="!canEditAssignments"
                 >
-                  <el-select
-                    class="select-primary"
-                    style="width: 100%; margin-bottom: 10px"
-                    :error="errors[0]"
-                    size="large"
-                    placeholder="Seleccionar el responsable"
-                    v-model="user_id"
-                  >
-                    <el-option
-                      v-for="option in responsableOptions"
-                      class="select-primary"
-                      :value="option.id"
-                      :label="optionLabel(option)"
-                      :key="String(option.id)"
-                    >
-                    </el-option>
-                  </el-select>
-                  <span class="error-message" v-if="errors.length">{{
-                    errors[0]
-                  }}</span>
-                </ValidationProvider>
+                  <el-option
+                    v-for="option in staffOptions"
+                    :key="String(option.id)"
+                    :value="option.id"
+                    :label="option.label"
+                  />
+                </el-select>
+                <small class="text-muted d-block">
+                  Selecciona quién puede ver y gestionar este desarrollo.
+                </small>
+                <small
+                  v-if="!$can('users.index')"
+                  class="text-muted d-block mt-1"
+                >
+                  Lista limitada al personal ya visto en tus desarrollos. El
+                  super usuario puede asignar cualquier cuenta.
+                </small>
+              </div>
+            </div>
+
+            <div v-else-if="assigned_users.length" class="row">
+              <label class="col-sm-2 col-form-label">Personal asignado</label>
+              <div class="col-sm-7">
+                <span
+                  v-for="user in assigned_users"
+                  :key="user.id"
+                  class="badge badge-primary mr-1 mb-1"
+                >
+                  {{ formatAssignedUserName(user) }}
+                </span>
               </div>
             </div>
           </div>
@@ -128,6 +140,13 @@ import { extend } from "vee-validate";
 import { required, double, regex, confirmed } from "vee-validate/dist/rules";
 import { Option, Select } from "element-ui";
 import { mapActions, mapGetters } from "vuex";
+import swal from "sweetalert2";
+import {
+  buildStaffSelectOptions,
+  formatAssignedUserName,
+  canManageResidentialAssignments,
+} from "@/util/assignmentHelpers";
+import { extractApiErrors } from "@/util/userApi";
 
 extend("required", required);
 extend("double", double);
@@ -144,40 +163,13 @@ export default {
       "getUsersForSelect",
       "getResidentialById",
       "getResidentials",
-      "isStaff",
       "currentUser",
     ]),
-    responsableOptions() {
-      if (this.getUsersForSelect?.length) {
-        return this.getUsersForSelect;
-      }
-      if (!this.isStaff) {
-        return [];
-      }
-      const seen = new Set();
-      const options = (this.getResidentials || []).reduce((list, residential) => {
-        const id = residential.user_id;
-        if (!id || seen.has(String(id))) {
-          return list;
-        }
-        seen.add(String(id));
-        list.push({
-          id,
-          full_name: residential.user_name || `Usuario #${id}`,
-          email: "",
-        });
-        return list;
-      }, []);
-      const currentId = this.user_id || this.getResidentialById?.user_id;
-      if (currentId && !seen.has(String(currentId))) {
-        options.unshift({
-          id: currentId,
-          full_name:
-            this.getResidentialById?.user_name || `Usuario #${currentId}`,
-          email: "",
-        });
-      }
-      return options;
+    canManageAssignments() {
+      return canManageResidentialAssignments(this.currentUser);
+    },
+    canEditAssignments() {
+      return this.canManageAssignments;
     },
   },
   data() {
@@ -186,18 +178,44 @@ export default {
       name: "",
       address: "",
       cost: "",
-      user_id: "",
+      user_ids: [],
+      assigned_users: [],
+      staffOptions: [],
       lands: [],
       isEdit: false,
       isSubmitting: false,
+      hadAssigneesOnLoad: false,
     };
   },
   methods: {
+    formatAssignedUserName,
     ...mapActions([
       "createResidential",
       "fetchResidentialById",
       "updateResidential",
+      "fetchResidentials",
     ]),
+    async loadStaffOptions() {
+      const assignedFromList = (this.getResidentials || []).flatMap(
+        (r) => r.assigned_users || []
+      );
+      const apiUsers = this.$can("users.index")
+        ? await this.$store.dispatch("fetchUsersForSelect").then(() =>
+            (this.getUsersForSelect || []).map((u) => ({
+              id: u.id,
+              name: u.name || u.full_name?.split(" ")[0],
+              last_name: u.last_name || "",
+              email: u.email,
+              role_name: u.role_name,
+            }))
+          )
+        : [];
+
+      this.staffOptions = buildStaffSelectOptions({
+        apiUsers,
+        assignedUsers: [...assignedFromList, ...this.assigned_users],
+      });
+    },
     loadResidentialData(id) {
       this.fetchResidentialById(id)
         .then((res) => {
@@ -206,99 +224,117 @@ export default {
           this.address = res.address;
           this.cost = res.cost;
           this.lands = res.lands;
-          this.user_id = String(res.user_id);
+          this.user_ids = [...(res.user_ids || [])];
+          this.assigned_users = res.assigned_users || [];
+          this.hadAssigneesOnLoad = this.user_ids.length > 0;
           this.isEdit = true;
+          return this.loadStaffOptions();
         })
         .catch((error) => {
-          console.log(error);
+          console.error(error);
         });
     },
-    submit() {
+    async confirmClearAssignments() {
+      if (!this.hadAssigneesOnLoad || this.user_ids.length > 0) {
+        return true;
+      }
+      const result = await swal.fire({
+        title: "¿Quitar todo el personal asignado?",
+        text: "Ningún vendedor o administrador podrá ver este desarrollo hasta que vuelvas a asignar personal.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, quitar asignaciones",
+        cancelButtonText: "Cancelar",
+        customClass: {
+          confirmButton: "btn btn-warning btn-fill",
+          cancelButton: "btn btn-default btn-fill",
+        },
+        buttonsStyling: false,
+      });
+      return Boolean(result.value);
+    },
+    async submit() {
+      if (this.canManageAssignments) {
+        const confirmed = await this.confirmClearAssignments();
+        if (!confirmed) {
+          return;
+        }
+      }
+
       this.isSubmitting = true;
-      let data = {
+      const payload = {
         residential: {
           name: this.name,
           address: this.address,
           cost: this.cost,
-          user_id: this.user_id,
         },
       };
+
+      if (this.canManageAssignments) {
+        payload.residential.user_ids = this.user_ids;
+      }
+
       if (this.isEdit) {
-        data.residential.id = this.id;
-        this.updateResidential(data)
+        payload.residential.id = this.id;
+        this.updateResidential(payload)
           .then(() => {
             this.$notify({
-              title: "Success",
+              title: "Éxito",
               type: "success",
               message: "Fraccionamiento actualizado con éxito",
               icon: "tim-icons icon-bell-55",
             });
-            return true;
           })
           .catch((error) => {
-            console.log(error);
-            this.isSubmitting = false;
-            this.$notify({
-              title: "Error",
-              type: "danger",
-              message: "Error al actualizar el fraccionamiento",
-              icon: "tim-icons icon-bell-55",
-            });
+            this.handleError(error, "Error al actualizar el fraccionamiento");
           });
       } else {
-        this.createResidential(data)
+        this.createResidential(payload)
           .then(() => {
             this.$notify({
-              title: "Success",
+              title: "Éxito",
               type: "success",
               message: "Fraccionamiento creado con éxito",
               icon: "tim-icons icon-bell-55",
             });
-            return true;
           })
           .catch((error) => {
-            console.log(error);
-            this.isSubmitting = false;
+            this.handleError(error, "Error al crear el fraccionamiento");
             this.resetData();
-            this.$notify({
-              title: "Error",
-              type: "danger",
-              message: "Error al crear el fraccionamiento",
-              icon: "tim-icons icon-bell-55",
-            });
-            return false;
           });
       }
     },
+    handleError(error, fallback) {
+      this.isSubmitting = false;
+      const messages = extractApiErrors(error);
+      this.$notify({
+        title: "Error",
+        type: "danger",
+        message: messages[0] || fallback,
+        icon: "tim-icons icon-bell-55",
+      });
+    },
     goToResidentials() {
       this.$router.push({ name: "Residentials" });
-    },
-    optionLabel(option) {
-      if (option.email) {
-        return `${option.full_name} (${option.email})`;
-      }
-      return option.full_name;
     },
     resetData() {
       this.name = "";
       this.address = "";
       this.cost = "";
-      this.user_id = "";
+      this.user_ids = [];
+      this.assigned_users = [];
     },
   },
-  mounted() {
-    if (this.$can("users.index")) {
-      this.$store.dispatch("fetchUsersForSelect");
-    } else if (this.isStaff) {
-      this.$store.dispatch("fetchResidentials");
-    }
+  async mounted() {
+    await this.fetchResidentials();
+    await this.loadStaffOptions();
   },
   created() {
     const residentialId = this.$route.params.id;
     if (residentialId) {
       this.loadResidentialData(residentialId);
     }
-    this.isEdit = residentialId ? true : false;
+    this.isEdit = Boolean(residentialId);
   },
 };
 </script>

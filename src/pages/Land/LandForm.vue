@@ -8,6 +8,10 @@
             Terrenos
           </h4>
           <div>
+            <div v-if="readOnlyLandFields" class="alert alert-info mb-3">
+              Solo lectura: puede registrar pagos del contrato, pero no
+              modificar los datos del terreno.
+            </div>
             <div class="row">
               <label class="col-sm-2 col-form-label">Fraccionamiento:</label>
               <div class="col-sm-7">
@@ -23,6 +27,7 @@
                     size="large"
                     placeholder="Seleccionar el Fraccionamiento"
                     v-model="residential_id"
+                    :disabled="readOnlyLandFields"
                   >
                     <el-option
                       v-for="option in residentialList"
@@ -50,6 +55,7 @@
                   <base-input
                     required
                     v-model="land_code"
+                    :disabled="readOnlyLandFields"
                     :error="errors[0]"
                     :class="[
                       { 'has-success': passed },
@@ -72,6 +78,7 @@
                   <base-input
                     required
                     v-model="address"
+                    :disabled="readOnlyLandFields"
                     :error="errors[0]"
                     :class="[
                       { 'has-success': passed },
@@ -94,6 +101,7 @@
                   <base-input
                     required
                     v-model="block"
+                    :disabled="readOnlyLandFields"
                     :error="errors[0]"
                     :class="[
                       { 'has-success': passed },
@@ -116,6 +124,7 @@
                   <base-input
                     required
                     v-model="house_number"
+                    :disabled="readOnlyLandFields"
                     :error="errors[0]"
                     :class="[
                       { 'has-success': passed },
@@ -138,6 +147,7 @@
                   <base-input
                     required
                     v-model="size"
+                    :disabled="readOnlyLandFields"
                     :error="errors[0]"
                     :class="[
                       { 'has-success': passed },
@@ -160,6 +170,7 @@
                   <base-input
                     required
                     v-model="price"
+                    :disabled="readOnlyLandFields"
                     :error="errors[0]"
                     :class="[
                       { 'has-success': passed },
@@ -257,6 +268,7 @@ import { required, numeric } from "vee-validate/dist/rules";
 import { Option, Select } from "element-ui";
 import { mapActions, mapGetters } from "vuex";
 import ContractPaymentsPanel from "@/components/Contracts/ContractPaymentsPanel.vue";
+import { landHasNoContract } from "@/util/landHelpers";
 
 extend("required", required);
 extend("numeric", numeric);
@@ -320,16 +332,10 @@ export default {
       return Boolean(this.client_id) || Boolean(this.client_name);
     },
     hasContract() {
-      const contractId = this.contract_id;
-      if (
-        contractId === null ||
-        contractId === undefined ||
-        contractId === "" ||
-        contractId === "no"
-      ) {
-        return false;
-      }
-      return true;
+      return !landHasNoContract({ contract_id: this.contract_id });
+    },
+    readOnlyLandFields() {
+      return this.isEditMode && !this.$can("lands.update");
     },
     showPayments() {
       return (
@@ -439,6 +445,9 @@ export default {
       return selected ? selected.name : "";
     },
     submit() {
+      if (this.readOnlyLandFields) {
+        return;
+      }
       let data = {
         land: {
           land_code: this.land_code,

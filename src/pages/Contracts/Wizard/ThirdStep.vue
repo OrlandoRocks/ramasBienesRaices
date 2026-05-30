@@ -106,7 +106,6 @@
             </div>
 
             <div class="col-sm-12">
-
               <ValidationProvider
                 name="Aceptar Informacion del Contrato"
                 rules="required|numeric"
@@ -178,7 +177,7 @@ export default {
     },
     formattedStartDate() {
       return moment(this.contractInfo.start_date).locale("es").format("LL"); // Formato largo localizado
-    }
+    },
   },
   methods: {
     getError(fieldName) {

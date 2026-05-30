@@ -9,11 +9,11 @@ export const PAYMENT_STATUSES = [
 ];
 
 const STATUS_ALIASES = {
-  "0": "Pendiente",
-  "1": "Pagado",
-  "2": "Fallo",
-  "3": "Regrezado",
-  "4": "Cancelado",
+  0: "Pendiente",
+  1: "Pagado",
+  2: "Fallo",
+  3: "Regrezado",
+  4: "Cancelado",
   pending: "Pendiente",
   paid: "Pagado",
 };
@@ -26,7 +26,9 @@ export function coercePaymentStatus(raw) {
   if (PAYMENT_STATUSES.includes(value)) {
     return value;
   }
-  return STATUS_ALIASES[value] || STATUS_ALIASES[value.toLowerCase()] || "Pendiente";
+  return (
+    STATUS_ALIASES[value] || STATUS_ALIASES[value.toLowerCase()] || "Pendiente"
+  );
 }
 
 export function isPaidStatus(status) {

@@ -1,5 +1,4 @@
 import axios from "axios";
-import router from "@/router/router";
 
 const BASE_URL = process.env.VUE_APP_BACKEND_URL;
 
@@ -53,7 +52,9 @@ const actions = {
             payments_by_month: residential.attributes["payments-by-month"],
             expenses_by_month: residential.attributes["expenses-by-month"],
             cost: residential.attributes.cost,
-            net_balance: (residential.attributes["payments-by-month"] - residential.attributes["expenses-by-month"])
+            net_balance:
+              residential.attributes["payments-by-month"] -
+              residential.attributes["expenses-by-month"],
           };
         });
         commit("setResidentials", formatedResidentials);
@@ -69,7 +70,10 @@ const actions = {
       },
     };
     axios
-      .get(`${BASE_URL}/get_balance_data?residential_id=${data.residential_id}&month=${data.month}&year=${data.year}`, config)
+      .get(
+        `${BASE_URL}/get_balance_data?residential_id=${data.residential_id}&month=${data.month}&year=${data.year}`,
+        config
+      )
       .then((response) => {
         const formatedResidentials = response.data.data.map((residential) => {
           return {
@@ -82,7 +86,9 @@ const actions = {
             payments_by_month: residential.attributes["payments-by-month"],
             expenses_by_month: residential.attributes["expenses-by-month"],
             cost: residential.attributes.cost,
-            net_balance: (residential.attributes["payments-by-month"] - residential.attributes["expenses-by-month"])
+            net_balance:
+              residential.attributes["payments-by-month"] -
+              residential.attributes["expenses-by-month"],
           };
         });
         commit("setBalanceInfo", formatedResidentials);
@@ -115,7 +121,7 @@ const actions = {
           reject(error);
         });
     });
-  }
+  },
 };
 
 const mutations = {
@@ -127,7 +133,7 @@ const mutations = {
   },
   setResidentialsList(state, data) {
     state.residentials_list = data;
-  }
+  },
 };
 
 export default {

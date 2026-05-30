@@ -42,7 +42,10 @@ export function validateClientDocumentFile(file, doc) {
  * @param {{ requireAll?: boolean }} options
  * @returns {string[]} Spanish error messages
  */
-export function validateClientDocuments(files = {}, { requireAll = false } = {}) {
+export function validateClientDocuments(
+  files = {},
+  { requireAll = false } = {}
+) {
   const errors = [];
 
   CLIENT_DOCUMENTS.forEach((doc) => {

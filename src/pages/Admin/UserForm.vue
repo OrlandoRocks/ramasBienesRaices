@@ -118,6 +118,36 @@
             </div>
           </div>
 
+          <div
+            v-if="canManageUserResidentialLinks && !isClientRole"
+            class="row"
+          >
+            <label class="col-sm-2 col-form-label">Desarrollos asignados</label>
+            <div class="col-sm-7">
+              <el-select
+                class="select-primary"
+                style="width: 100%; margin-bottom: 10px"
+                v-model="residential_ids"
+                multiple
+                filterable
+                collapse-tags
+                placeholder="Seleccionar fraccionamientos"
+                size="large"
+              >
+                <el-option
+                  v-for="res in residentialOptions"
+                  :key="String(res.id)"
+                  :label="res.name"
+                  :value="res.id"
+                />
+              </el-select>
+              <small class="text-muted d-block">
+                Restringe qué fraccionamientos y clientes puede ver este
+                usuario.
+              </small>
+            </div>
+          </div>
+
           <div v-if="isClientRole" class="row">
             <label class="col-sm-2 col-form-label">Cliente (CRM)</label>
             <div class="col-sm-7">
@@ -192,13 +222,20 @@ export default {
       role_id: null,
       client_id: null,
       roles: [],
+      residential_ids: [],
       isEdit: false,
       isSubmitting: false,
       formErrors: [],
     };
   },
   computed: {
-    ...mapGetters(["getClients", "getAssignableRoles"]),
+    ...mapGetters(["getClients", "getAssignableRoles", "getResidentials"]),
+    canManageUserResidentialLinks() {
+      return this.$canManageUserResidentialAssignments();
+    },
+    residentialOptions() {
+      return this.getResidentials || [];
+    },
     clients() {
       return this.getClients || [];
     },
@@ -216,6 +253,7 @@ export default {
       "updateUser",
       "fetchClients",
       "fetchUsers",
+      "fetchResidentials",
     ]),
     roleLabel,
     goToList() {
@@ -231,6 +269,9 @@ export default {
       };
       if (this.password) {
         payload.password = this.password;
+      }
+      if (this.canManageUserResidentialLinks && !this.isClientRole) {
+        payload.residential_ids = this.residential_ids;
       }
       return payload;
     },
@@ -273,6 +314,7 @@ export default {
           this.email = user.email;
           this.role_id = user.roleId;
           this.client_id = user.clientId;
+          this.residential_ids = [...(user.residentialIds || [])];
           this.isEdit = true;
         })
         .catch((error) => {
@@ -306,6 +348,9 @@ export default {
   created() {
     const userId = this.$route.params.id;
     this.fetchClients();
+    if (this.canManageUserResidentialLinks) {
+      this.fetchResidentials();
+    }
     if (userId) {
       this.loadUser(userId);
     } else {

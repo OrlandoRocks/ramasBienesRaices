@@ -42,6 +42,7 @@ const emptyClient = () => ({
   ine_verification_status: "pending",
   tax_document_verification_status: "pending",
   proof_of_address_verification_status: "pending",
+  residential_ids: [],
 });
 
 const state = {
@@ -96,7 +97,7 @@ const actions = {
         throw error;
       });
   },
-  updateClient({ commit, state }, payload) {
+  updateClient({ commit }, payload) {
     const id = payload.id || payload.client?.id;
     return updateClientApi(id, payload)
       .then((response) => {
@@ -111,7 +112,15 @@ const actions = {
         throw error;
       });
   },
-  deleteClient({ commit, state }, id) {
+  updateClientProfile({ commit }, payload) {
+    const id = payload.id || payload.client?.id;
+    return updateClientApi(id, payload).then((response) => {
+      const client = normalizeClientFromApi(response.data);
+      commit("setClient", client);
+      return client;
+    });
+  },
+  deleteClient({ commit }, id) {
     return deleteClientApi(id)
       .then((response) => {
         commit("setDeleteClient", id);

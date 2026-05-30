@@ -23,7 +23,11 @@ export default {
     return axios.post(`${BASE_URL}/users`, { user: payload }, authConfig());
   },
   update(id, payload) {
-    return axios.patch(`${BASE_URL}/users/${id}`, { user: payload }, authConfig());
+    return axios.patch(
+      `${BASE_URL}/users/${id}`,
+      { user: payload },
+      authConfig()
+    );
   },
   remove(id) {
     return axios.delete(`${BASE_URL}/users/${id}`, authConfig());

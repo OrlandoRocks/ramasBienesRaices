@@ -62,6 +62,7 @@ const ClientDetail = () => import("src/pages/Clients/ClientDetail.vue");
 const ExpenseForm = () => import("src/pages/Expense/ExpenseForm.vue");
 const PaymentForm = () => import("src/pages/Payments/PaymentForm.vue");
 const ClientPortal = () => import("src/pages/Client/ClientPortal.vue");
+const ClientProfile = () => import("src/pages/Client/ClientProfile.vue");
 
 // Maps pages
 const GoogleMaps = () =>
@@ -72,8 +73,6 @@ const VectorMaps = () =>
   import(/* webpackChunkName: "extra" */ "src/pages/Maps/VectorMaps.vue");
 
 // Pages
-const User = () =>
-  import(/* webpackChunkName: "pages" */ "src/pages/Pages/UserProfile.vue");
 // const Pricing = () =>
 //   import(/* webpackChunkName: "pages" */ "src/pages/Pages/Pricing.vue");
 const Login = () =>
@@ -91,7 +90,6 @@ const ContractsTable = () => import("src/pages/Contracts/ContractTable.vue");
 const PaymentsTable = () => import("src/pages/Payments/PaymentTable.vue");
 const UsersList = () => import("src/pages/Admin/UsersList.vue");
 const UserForm = () => import("src/pages/Admin/UserForm.vue");
-
 
 const ContractShow = () => import("src/pages/Contracts/ContractShow.vue");
 
@@ -278,6 +276,12 @@ let clientPortalMenu = {
       components: { default: ClientPortal },
       meta: { requiresAuth: true, permission: "contracts.index" },
     },
+    {
+      path: "profile",
+      name: "ClientProfile",
+      components: { default: ClientProfile },
+      meta: { requiresAuth: true, permission: "clients.profile.view" },
+    },
   ],
 };
 
@@ -454,7 +458,7 @@ let balanceMenu = {
       path: "/get_balance_data",
       name: "BalanceData",
       components: { default: BalanceIndex },
-    }
+    },
   ],
   meta: { requiresAuth: true },
 };

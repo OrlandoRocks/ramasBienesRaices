@@ -47,5 +47,3 @@ if (localAuthToken && !isAuthTokenValid(localAuthToken)) {
   clearAuthToken();
   store.commit("resetUserInfo");
 }
-
-

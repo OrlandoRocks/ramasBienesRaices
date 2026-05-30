@@ -73,7 +73,10 @@ export function parseUserFromApiResponse(response) {
   const roleId =
     attributes["role-id"] || attributes.role_id || attributes.roleId || null;
   const clientId =
-    attributes["client-id"] || attributes.client_id || attributes.clientId || null;
+    attributes["client-id"] ||
+    attributes.client_id ||
+    attributes.clientId ||
+    null;
 
   return {
     id: resource?.id || attributes.id || null,

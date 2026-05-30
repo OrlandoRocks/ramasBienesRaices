@@ -21,6 +21,9 @@ export function parseManagedUser(resource) {
   const lastName = attributes["last-name"] || attributes.last_name || "";
   const name = attributes.name || "";
 
+  const residentialIds =
+    attributes["residential_ids"] || attributes.residential_ids;
+
   return {
     id: resource?.id || attributes.id,
     name,
@@ -30,6 +33,9 @@ export function parseManagedUser(resource) {
     roleId: attributes["role-id"] ?? attributes.role_id ?? null,
     roleName: attributes["role-name"] || attributes.role_name || null,
     clientId: attributes["client-id"] ?? attributes.client_id ?? null,
+    residentialIds: Array.isArray(residentialIds)
+      ? residentialIds.map((id) => Number(id))
+      : [],
     createdAt: attributes["created-at"] || attributes.created_at || null,
     updatedAt: attributes["updated-at"] || attributes.updated_at || null,
   };

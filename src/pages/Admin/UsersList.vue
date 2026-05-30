@@ -39,19 +39,13 @@
               </base-input>
             </div>
 
-            <div v-if="loadError" class="alert alert-danger">{{ loadError }}</div>
+            <div v-if="loadError" class="alert alert-danger">
+              {{ loadError }}
+            </div>
 
             <el-table v-loading="loading" :data="queriedData">
-              <el-table-column
-                prop="fullName"
-                label="Nombre"
-                min-width="180"
-              />
-              <el-table-column
-                prop="email"
-                label="Correo"
-                min-width="200"
-              />
+              <el-table-column prop="fullName" label="Nombre" min-width="180" />
+              <el-table-column prop="email" label="Correo" min-width="200" />
               <el-table-column label="Rol" min-width="140">
                 <template slot-scope="{ row }">
                   {{ roleLabel(row.roleName) }}

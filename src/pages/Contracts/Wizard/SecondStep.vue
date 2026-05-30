@@ -106,6 +106,7 @@ import { extend } from "vee-validate";
 import { required, numeric } from "vee-validate/dist/rules";
 import { Table, TableColumn, DatePicker, Select, Option } from "element-ui";
 import { mapGetters } from "vuex";
+import { buildMonthlyPaymentDates } from "@/util/paymentScheduleDates";
 
 extend("required", required);
 extend("numeric", numeric);
@@ -178,19 +179,21 @@ export default {
       this.paymentData = [];
       let total = this.landInfo.price - parced_down_payment;
 
+      const paymentDates = buildMonthlyPaymentDates(
+        parced_start_date,
+        parced_months
+      );
+
       for (let i = 0; i < parced_months; i++) {
         let payment = parced_pay_month;
         const quantity = total;
         const pay_number = i + 1;
-        const payment_date = new Date(parced_start_date);
         const curr_quantity = this.formatCurrency(quantity);
         let curr_payment = this.formatCurrency(payment);
         if (parced_months - 1 == i) {
-          console.log(total);
           payment = total;
           curr_payment = this.formatCurrency(total);
         }
-        payment_date.setMonth(payment_date.getMonth() + i);
         total = quantity - payment;
         this.paymentData.push({
           quantity,
@@ -198,7 +201,7 @@ export default {
           payment,
           curr_payment,
           pay_number,
-          payment_date: this.formatPaymentDate(payment_date),
+          payment_date: paymentDates[i],
           client: this.clientFullName,
           client_id: this.getClientById.id,
           status: "Pendiente",
@@ -224,12 +227,6 @@ export default {
         verticalAlign: "top",
         type: "danger",
       });
-    },
-    formatPaymentDate(date) {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
     },
   },
 };

@@ -38,9 +38,7 @@
           <span
             class="badge"
             :class="
-              row.timingStatus === 'A tiempo'
-                ? 'badge-warning'
-                : 'badge-danger'
+              row.timingStatus === 'A tiempo' ? 'badge-warning' : 'badge-danger'
             "
           >
             {{ row.timingStatus }}

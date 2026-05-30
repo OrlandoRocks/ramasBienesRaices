@@ -2,155 +2,112 @@
   <div class="row">
     <div class="col-md-12">
       <card>
-        <h4 slot="header" class="card-title"><b>Contrato</b></h4>
+        <h4
+          slot="header"
+          class="card-title contract-show-back"
+          @click="goToContracts"
+        >
+          <i class="tim-icons icon-minimal-left"></i>
+          Contrato
+        </h4>
 
-        <div class="card-body">
-          <div class="typography-line">
-            <h3>
-              <span><b>Fecha del Contrato:</b></span
-              >{{ contractInfo.contract_date }}
-            </h3>
+        <div v-if="loading" class="text-center py-4 text-muted">
+          Cargando contrato...
+        </div>
+        <div v-else class="card-body contract-show-body">
+          <div class="typography-line contract-show-section">
+            <h6><span>CONTRATO</span></h6>
+            <div class="row">
+              <div
+                v-for="field in contractFields"
+                :key="field.label"
+                class="col-6 col-md-4 col-lg-2 contract-detail-field"
+              >
+                <h5>{{ field.label }}</h5>
+                <ul class="list-unstyled">
+                  <li>{{ field.value }}</li>
+                </ul>
+              </div>
+            </div>
           </div>
 
-          <div class="typography-line">
-            <h3>
-              <span><b>Meses a pagar:</b></span
-              >{{ contractInfo.months }}
-            </h3>
+          <div class="typography-line contract-show-section">
+            <h6><span>CLIENTE</span></h6>
+            <div class="row">
+              <div
+                v-for="field in clientFields"
+                :key="field.label"
+                class="col-6 col-md-4 col-lg contract-detail-field"
+              >
+                <h5>{{ field.label }}</h5>
+                <ul class="list-unstyled">
+                  <li>{{ field.value }}</li>
+                </ul>
+              </div>
+            </div>
           </div>
 
-          <div class="typography-line">
-            <h3>
-              <span><b>Pago por mes:</b></span>
-              {{ this.formatCurrency(contractInfo.monthly_payment) }} MXN
-            </h3>
-          </div>
-
-          <div class="typography-line">
-            <h3>
-              <span><b>Abono inicial:</b></span>
-              {{ this.formatCurrency(contractInfo.down_payment) }} MXN
-            </h3>
-          </div>
-
-          <div class="typography-line">
-            <h3>
-              <span><b>Precio del terreno:</b></span
-              >{{ this.formatCurrency(contractInfo.total_price) }} MXN
-            </h3>
-          </div>
-
-          <div class="typography-line">
-            <h3>
-              <span><b>Cantidad Pagada:</b></span
-              >{{ this.formatCurrency(contractInfo.total_paid) }} MXN
-            </h3>
+          <div
+            class="typography-line contract-show-section contract-show-section--last"
+          >
+            <h6><span>TERRENO</span></h6>
+            <div class="row">
+              <div
+                v-for="field in landFields"
+                :key="field.label"
+                class="col-6 col-md-4 col-lg contract-detail-field"
+              >
+                <h5>{{ field.label }}</h5>
+                <ul class="list-unstyled">
+                  <li>{{ field.value }}</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </card>
     </div>
 
-    <div class="col-md-6">
-      <card>
-        <h4 slot="header" class="card-title"><b>Cliente</b></h4>
-
-        <div class="card-body">
-          <div class="typography-line">
-            <h3>
-              <span><b>Nombre:</b></span>
-              {{ clientInfo.full_name }}
-            </h3>
-          </div>
-
-          <div class="typography-line">
-            <h3>
-              <span><b>Telefono:</b></span
-              >{{ clientInfo.phone_number }}
-            </h3>
-          </div>
-
-          <div class="typography-line">
-            <h3>
-              <span><b>Email:</b></span
-              >{{ clientInfo.email }}
-            </h3>
-          </div>
-
-          <div class="typography-line">
-            <h3>
-              <span><b>Direccion:</b></span
-              >{{ clientInfo.address }}
-            </h3>
-          </div>
-
-          <div class="typography-line">
-            <h3>
-              <span><b>RFC:</b></span
-              >{{ clientInfo.rfc }}
-            </h3>
-          </div>
-        </div>
-      </card>
-    </div>
-
-    <div class="col-md-6">
-      <card>
-        <h4 slot="header" class="card-title"><b>Terreno</b></h4>
-
-        <div class="card-body">
-          <div class="typography-line">
-            <h3>
-              <span><b>Fraccionamiento:</b></span>
-              {{ landInfo.residential_name }}
-            </h3>
-          </div>
-
-          <div class="typography-line">
-            <h3>
-              <span><b>Direccion:</b></span
-              >{{ landInfo.address }}
-            </h3>
-          </div>
-
-          <div class="typography-line">
-            <h3>
-              <span><b>Codigo:</b></span
-              >{{ landInfo.land_code }}
-            </h3>
-          </div>
-
-          <div class="typography-line">
-            <h3>
-              <span><b>Tamaño:</b></span
-              >{{ landInfo.size }}
-            </h3>
-          </div>
-
-          <div class="typography-line">
-            <h3>
-              <span><b>Numero de Casa:</b></span
-              >{{ landInfo.house_number }}
-            </h3>
-          </div>
-        </div>
-      </card>
-    </div>
     <div class="col-md-12">
       <contract-payments-panel
-        v-if="contractId"
+        v-if="contractId && !loading"
         :contract-id="contractId"
         :payment-return-query="paymentReturnQuery"
       />
     </div>
   </div>
 </template>
+
 <script>
 import { mapGetters, mapActions } from "vuex";
 import ContractPaymentsPanel from "@/components/Contracts/ContractPaymentsPanel.vue";
 
+function displayValue(value) {
+  if (value === null || value === undefined || value === "") {
+    return "—";
+  }
+  return value;
+}
+
+function formatDisplayDate(dateStr) {
+  if (!dateStr || dateStr === "0000-00-00") {
+    return "—";
+  }
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(dateStr));
+  if (match) {
+    return `${match[3]}/${match[2]}/${match[1]}`;
+  }
+  return dateStr;
+}
+
 export default {
   components: {
     ContractPaymentsPanel,
+  },
+  data() {
+    return {
+      loading: false,
+    };
   },
   computed: {
     ...mapGetters(["getLandById", "getClientById", "getContractById"]),
@@ -173,23 +130,84 @@ export default {
         contractId: String(this.contractId),
       };
     },
+    contractFields() {
+      const c = this.contractInfo;
+      return [
+        {
+          label: "Fecha del contrato",
+          value: formatDisplayDate(c.contract_date),
+        },
+        { label: "Meses a pagar", value: displayValue(c.months) },
+        {
+          label: "Pago por mes",
+          value: `${this.formatCurrency(c.monthly_payment)} MXN`,
+        },
+        {
+          label: "Abono inicial",
+          value: `${this.formatCurrency(c.down_payment)} MXN`,
+        },
+        {
+          label: "Precio del terreno",
+          value: `${this.formatCurrency(c.total_price)} MXN`,
+        },
+        {
+          label: "Cantidad pagada",
+          value: `${this.formatCurrency(c.total_paid)} MXN`,
+        },
+      ];
+    },
+    clientFields() {
+      const client = this.clientInfo;
+      return [
+        { label: "Nombre", value: displayValue(client.full_name) },
+        { label: "Teléfono", value: displayValue(client.phone_number) },
+        { label: "Email", value: displayValue(client.email) },
+        { label: "Dirección", value: displayValue(client.address) },
+        { label: "RFC", value: displayValue(client.rfc) },
+      ];
+    },
+    landFields() {
+      const land = this.landInfo;
+      return [
+        {
+          label: "Fraccionamiento",
+          value: displayValue(land.residential_name),
+        },
+        { label: "Dirección", value: displayValue(land.address) },
+        { label: "Código", value: displayValue(land.land_code) },
+        { label: "Tamaño", value: displayValue(land.size) },
+        {
+          label: "Número de casa",
+          value: displayValue(land.house_number),
+        },
+      ];
+    },
   },
   methods: {
     ...mapActions(["fetchContractById", "fetchLandById", "fetchClientById"]),
 
+    goToContracts() {
+      this.$router.push({ name: "Contracts" });
+    },
+
     loadContractData(contract_id) {
-      this.fetchContractById(contract_id).then((res) => {
-        const user = this.$store.getters.currentUser;
-        if (user?.isClient) {
-          return;
-        }
-        if (!res?.land && res?.land_id) {
-          this.fetchLandById(res.land_id).catch(() => {});
-        }
-        if (!res?.client && res?.client_id) {
-          this.fetchClientById(res.client_id).catch(() => {});
-        }
-      });
+      this.loading = true;
+      this.fetchContractById(contract_id)
+        .then((res) => {
+          const user = this.$store.getters.currentUser;
+          if (user?.isClient) {
+            return;
+          }
+          if (!res?.land && res?.land_id) {
+            this.fetchLandById(res.land_id).catch(() => {});
+          }
+          if (!res?.client && res?.client_id) {
+            this.fetchClientById(res.client_id).catch(() => {});
+          }
+        })
+        .finally(() => {
+          this.loading = false;
+        });
     },
   },
   created() {
@@ -200,6 +218,58 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.contract-show-back {
+  cursor: pointer;
+  margin-bottom: 0;
+}
+
+.contract-show-back:hover {
+  color: #e14eca !important;
+}
+
+.contract-show-body {
+  padding-top: 0.5rem;
+}
+
+.contract-show-section {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.contract-show-section--last {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.contract-detail-field {
+  margin-bottom: 0.75rem;
+}
+
+.contract-detail-field h5 {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.2rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.contract-detail-field li {
+  font-size: 0.9rem;
+  line-height: 1.35;
+  margin-bottom: 0;
+  word-break: break-word;
+}
+
+.contract-show-section h6 {
+  margin-bottom: 0.75rem;
+}
+</style>
+
 <style>
 .card .alert {
   position: relative !important;
