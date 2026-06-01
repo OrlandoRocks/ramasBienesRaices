@@ -1,11 +1,26 @@
 import axios from "axios";
 import router from "@/router/router";
+import paymentsService from "@/services/paymentsService";
 import { formatPaymentFromApi } from "@/util/paymentApi";
+import {
+  computeContractFinancials,
+  enrichPaymentsWithRunningTotal,
+} from "@/util/contractPaymentTotals";
 
 const BASE_URL = process.env.VUE_APP_BACKEND_URL;
 
+function coercePaymentsArray(data) {
+  if (Array.isArray(data)) {
+    return data;
+  }
+  if (data && Array.isArray(data.payments)) {
+    return data.payments;
+  }
+  return [];
+}
+
 function normalizeContractPayments(payments) {
-  return (payments || []).map((payment) => {
+  return coercePaymentsArray(payments).map((payment) => {
     const formatted = formatPaymentFromApi(payment);
     return {
       ...payment,
@@ -15,9 +30,28 @@ function normalizeContractPayments(payments) {
 }
 
 function fetchContractPaymentsFromApi(contractId, config) {
-  return axios
-    .get(`${BASE_URL}/contracts/${contractId}/payments`, config)
-    .then((response) => normalizeContractPayments(response.data));
+  return paymentsService
+    .fetchContractPayments(contractId, config)
+    .then((data) => normalizeContractPayments(data))
+    .catch((error) => {
+      console.warn("GET /contracts/:id/payments failed", error);
+      return null;
+    });
+}
+
+function syncContractFinancialFields(contract) {
+  const financials = computeContractFinancials({
+    payments: contract.payments,
+    total_price: contract.total_price,
+    down_payment: contract.down_payment,
+  });
+  return {
+    ...contract,
+    total_paid: financials.totalPaid,
+    remaining_balance: financials.pendingBalance,
+    total_scheduled: financials.totalScheduled,
+    schedule_remainder: financials.scheduleRemainder,
+  };
 }
 
 function mapClientFromContractResponse(client) {
@@ -106,14 +140,17 @@ const getters = {
     return state.contract;
   },
   getContractPayments(state) {
-    const payments = state.contract.payments || [];
-    let total = state.contract.total_price - state.contract.down_payment;
-    return payments.map((payment, index) => {
-      const row = { ...payment };
-      row.total = total;
-      total -= Number(row.amount) || 0;
-      row.row_number = index + 1;
-      return row;
+    return enrichPaymentsWithRunningTotal(
+      state.contract.payments,
+      state.contract.total_price,
+      state.contract.down_payment
+    );
+  },
+  getContractFinancialSummary(state) {
+    return computeContractFinancials({
+      payments: state.contract.payments,
+      total_price: state.contract.total_price,
+      down_payment: state.contract.down_payment,
     });
   },
 };
@@ -175,24 +212,34 @@ const actions = {
             commit("setLand", mappedLand);
           }
 
+          const embeddedPayments = normalizeContractPayments(contract.payments);
+
           return fetchContractPaymentsFromApi(id, config).then(
-            (normalizedPayments) => {
-              commit("setContract", {
-                id: contract.id,
-                client_id: contract.client_id,
-                land_id: contract.land_id,
-                contract_date: contract.contract_date,
-                contract_type: contract.contract_type,
-                down_payment: contract.down_payment,
-                monthly_payment: contract.monthly_payment,
-                total_price: contract.total_price,
-                payments: normalizedPayments,
-                total_paid: contract.total_paid,
-                yearly_payment: contract.yearly_payment,
-                months: contract.months,
-                penalty_interest: contract.penalty_interest,
-                extraordinary_payment: contract.extraordinary_payment,
-              });
+            (fromPaymentsEndpoint) => {
+              const normalizedPayments =
+                fromPaymentsEndpoint != null
+                  ? fromPaymentsEndpoint
+                  : embeddedPayments;
+
+              commit(
+                "setContract",
+                syncContractFinancialFields({
+                  id: contract.id,
+                  client_id: contract.client_id,
+                  land_id: contract.land_id,
+                  contract_date: contract.contract_date,
+                  contract_type: contract.contract_type,
+                  down_payment: contract.down_payment,
+                  monthly_payment: contract.monthly_payment,
+                  total_price: contract.total_price,
+                  payments: normalizedPayments,
+                  total_paid: contract.total_paid,
+                  yearly_payment: contract.yearly_payment,
+                  months: contract.months,
+                  penalty_interest: contract.penalty_interest,
+                  extraordinary_payment: contract.extraordinary_payment,
+                })
+              );
               resolve({
                 ...contract,
                 client: mappedClient || contract.client,
@@ -261,9 +308,17 @@ const actions = {
       },
     };
     return fetchContractPaymentsFromApi(id, config).then((payments) => {
-      commit("mergeContractPayments", payments);
-      return payments;
+      if (payments != null) {
+        commit("mergeContractPayments", payments);
+        return payments;
+      }
+      return state.contract.payments || [];
     });
+  },
+  /** Reload payments and derived totals after a single payment is edited. */
+  syncContractAfterPaymentUpdate({ dispatch, state }, contractId) {
+    const id = contractId || state.contract?.id;
+    return dispatch("refreshContractPayments", id);
   },
   deleteContract({ commit }, id) {
     return new Promise((resolve, reject) => {
@@ -291,16 +346,26 @@ const mutations = {
     state.contracts = contracts;
   },
   setContract(state, contract) {
-    state.contract = contract;
+    state.contract = syncContractFinancialFields(contract);
   },
+  /** Replace entire installment list (required after server-side amount redistribution). */
   mergeContractPayments(state, payments) {
     if (!state.contract) {
       return;
     }
-    state.contract = {
+    state.contract = syncContractFinancialFields({
       ...state.contract,
       payments: [...payments],
-    };
+    });
+  },
+  setContractPayments(state, payments) {
+    if (!state.contract) {
+      return;
+    }
+    state.contract = syncContractFinancialFields({
+      ...state.contract,
+      payments: [...payments],
+    });
   },
   updateContractPayment(state, payment) {
     if (!state.contract?.payments?.length) {
@@ -317,7 +382,12 @@ const mutations = {
       ...state.contract.payments[index],
       ...formatted,
     };
-    state.contract.payments.splice(index, 1, updated);
+    const payments = [...state.contract.payments];
+    payments.splice(index, 1, updated);
+    state.contract = syncContractFinancialFields({
+      ...state.contract,
+      payments,
+    });
   },
   setContractUpdate(state, contract) {
     const index = state.contracts.findIndex((c) => c.id === contract.id);

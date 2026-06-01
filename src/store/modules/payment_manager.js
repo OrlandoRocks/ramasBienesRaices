@@ -1,6 +1,6 @@
 import axios from "axios";
 import router from "@/router/router";
-import paymentsService from "@/services/paymentsService";
+import { updatePayment } from "@/services/paymentsService";
 import { formatPaymentFromApi } from "@/util/paymentApi";
 
 const BASE_URL = process.env.VUE_APP_BACKEND_URL;
@@ -122,7 +122,7 @@ const actions = {
         });
     });
   },
-  updatePayment({ commit }, payload) {
+  updatePayment({ commit, dispatch }, payload) {
     return new Promise((resolve, reject) => {
       const paymentId = payload.id || payload.payment?.id;
       const normalizedId = paymentId != null ? String(paymentId).trim() : "";
@@ -138,19 +138,30 @@ const actions = {
       const usePatch = payload.usePatch === true;
 
       const request = usePatch
-        ? paymentsService.patch(normalizedId, paymentBody)
-        : axios.put(`${BASE_URL}/payments/${normalizedId}`, payload, {
-            headers: {
-              Authorization: localStorage.getItem("auth_token"),
-            },
-          });
+        ? updatePayment(normalizedId, paymentBody).then((result) => result)
+        : axios
+            .put(`${BASE_URL}/payments/${normalizedId}`, payload, {
+              headers: {
+                Authorization: localStorage.getItem("auth_token"),
+              },
+            })
+            .then((response) => ({
+              payment: formatPaymentFromApi(response.data) || response.data,
+              adjustedCount: 0,
+            }));
 
       request
-        .then((response) => {
-          const formatted =
-            formatPaymentFromApi(response.data) || response.data;
+        .then(({ payment: formatted, adjustedCount }) => {
           commit("setPaymentUpdate", formatted);
           commit("setPayment", formatted);
+          const contractId =
+            formatted?.contract_id ||
+            formatted?.contract?.id ||
+            paymentBody.contract_id;
+          const amountInBody = paymentBody.amount != null;
+          if (contractId && (amountInBody || adjustedCount > 0)) {
+            dispatch("syncContractAfterPaymentUpdate", contractId);
+          }
           resolve(formatted);
         })
         .catch((error) => {
@@ -159,13 +170,18 @@ const actions = {
         });
     });
   },
-  patchPayment({ commit }, { id, payment }) {
-    return paymentsService.patch(id, payment).then((response) => {
-      const formatted = formatPaymentFromApi(response.data);
-      commit("setPaymentUpdate", formatted);
-      commit("setPayment", formatted);
-      return formatted;
-    });
+  patchPayment({ commit, dispatch }, { id, payment }) {
+    return updatePayment(id, payment).then(
+      ({ payment: formatted, adjustedCount }) => {
+        commit("setPaymentUpdate", formatted);
+        commit("setPayment", formatted);
+        const contractId = formatted?.contract_id || formatted?.contract?.id;
+        if (contractId && (payment?.amount != null || adjustedCount > 0)) {
+          dispatch("syncContractAfterPaymentUpdate", contractId);
+        }
+        return formatted;
+      }
+    );
   },
   deletePayement({ commit }, id) {
     return new Promise((resolve, reject) => {

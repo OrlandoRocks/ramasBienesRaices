@@ -7,34 +7,54 @@
         </div>
       </div>
       <div class="row">
-        <div class="col-lg-8 ml-auto mr-auto">
-          <div class="row">
-            <el-table class="table-container" :data="paymentData">
+        <div class="col-lg-10 ml-auto mr-auto">
+          <div v-loading="paymentsRefreshing" class="payments-table-wrap">
+            <el-table
+              v-if="paymentData.length"
+              class="table-container"
+              :data="paymentData"
+              row-key="id"
+            >
               <el-table-column
-                v-for="column in tableColumns"
-                :key="column.label"
-                :min-width="column.minWidth"
-                :prop="column.prop"
-                :label="column.label"
-                :formatter="
-                  typeof column.formatter === 'function'
-                    ? column.formatter
-                    : null
-                "
+                label="Total a Pagar"
+                min-width="150"
+                prop="total"
               >
-                <template
-                  #default="{ row }"
-                  v-if="typeof column.formatter !== 'function'"
-                >
-                  <div
-                    v-if="column.formatter"
-                    :is="column.formatter"
-                    :row="row"
-                    :column="column"
-                  ></div>
-                  <template v-else>
-                    {{ row[column.prop] }}
-                  </template>
+                <template slot-scope="{ row }">
+                  {{ formatCurrency(row.total) }}
+                </template>
+              </el-table-column>
+              <el-table-column label="Monto" min-width="110" prop="amount">
+                <template slot-scope="{ row }">
+                  {{ formatCurrency(row.amount) }}
+                </template>
+              </el-table-column>
+              <el-table-column
+                label="Numero de pago"
+                min-width="110"
+                prop="row_number"
+              />
+              <el-table-column
+                label="Fecha de Pago"
+                min-width="130"
+                prop="payment_date"
+              />
+              <el-table-column label="Tipo" min-width="120" prop="payment_type">
+                <template slot-scope="{ row }">
+                  {{ row.payment_type || "—" }}
+                </template>
+              </el-table-column>
+              <el-table-column label="Estatus" min-width="120">
+                <template slot-scope="{ row }">
+                  <span
+                    :class="
+                      row.payment_status_name === 'Pagado'
+                        ? 'text-success'
+                        : 'text-warning'
+                    "
+                  >
+                    {{ row.payment_status_name }}
+                  </span>
                 </template>
               </el-table-column>
               <el-table-column
@@ -43,10 +63,10 @@
                 align="right"
                 label="Acciones"
               >
-                <div slot-scope="props">
+                <template slot-scope="{ row }">
                   <base-button
                     v-if="$can('payments.update')"
-                    @click.native="openEditPayment(props.row)"
+                    @click.native="openEditPayment(row)"
                     class="edit btn-link"
                     type="info"
                     size="sm"
@@ -56,18 +76,40 @@
                   </base-button>
                   <base-button
                     v-if="$can('payments.capture')"
-                    @click.native="handlePayment(props.row)"
+                    @click.native="handlePayment(row)"
                     class="edit btn-link"
                     type="warning"
                     size="sm"
                     icon
-                    :disabled="!canCapturePayment(props.row)"
+                    :disabled="!canCapturePayment(row)"
                   >
                     <i class="tim-icons icon-money-coins"></i>
                   </base-button>
-                </div>
+                </template>
               </el-table-column>
             </el-table>
+
+            <p v-else class="text-muted py-3 mb-0">
+              No hay pagos registrados para este contrato.
+            </p>
+
+            <div
+              v-if="paymentData.length"
+              class="payment-schedule-summary text-right mt-3"
+            >
+              <div>
+                <strong>Total del contrato:</strong>
+                {{ formatCurrency(scheduleSummary.totalScheduled) }}
+              </div>
+              <div>
+                <strong>Total pagado:</strong>
+                {{ formatCurrency(scheduleSummary.totalPaid) }}
+              </div>
+              <div>
+                <strong>Saldo pendiente:</strong>
+                {{ formatCurrency(scheduleSummary.pendingBalance) }}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -88,6 +130,7 @@
 import { Table, TableColumn } from "element-ui";
 import { mapGetters, mapActions } from "vuex";
 import PaymentEditModal from "@/components/Payments/PaymentEditModal.vue";
+import { redistributionSuccessMessage } from "@/util/paymentApi";
 
 export default {
   name: "ContractPaymentsPanel",
@@ -108,58 +151,20 @@ export default {
   },
   data() {
     return {
+      paymentsRefreshing: false,
       editModalVisible: false,
       captureModalMode: false,
       selectedPaymentId: null,
       selectedPaymentRow: null,
-      tableColumns: [
-        {
-          prop: "total",
-          label: "Total a Pagar",
-          minWidth: 150,
-          formatter: (row) => `${this.formatCurrency(row.total)}`,
-        },
-        {
-          prop: "amount",
-          label: "Pago",
-          minWidth: 100,
-          formatter: (row) => `${this.formatCurrency(row.amount)}`,
-        },
-        {
-          prop: "row_number",
-          label: "Numero de pago",
-          minWidth: 100,
-        },
-        {
-          prop: "payment_date",
-          label: "Fecha de Pago",
-          minWidth: 150,
-        },
-        {
-          prop: "payment_status_name",
-          label: "Estatus",
-          minWidth: 150,
-          formatter: (row) => {
-            return (
-              <p
-                class={
-                  row.payment_status_name === "Pagado"
-                    ? "text-success"
-                    : "text-warning"
-                }
-              >
-                {row.payment_status_name}
-              </p>
-            );
-          },
-        },
-      ],
     };
   },
   computed: {
-    ...mapGetters(["getContractPayments"]),
+    ...mapGetters(["getContractPayments", "getContractFinancialSummary"]),
     paymentData() {
       return this.getContractPayments;
+    },
+    scheduleSummary() {
+      return this.getContractFinancialSummary;
     },
   },
   watch: {
@@ -173,7 +178,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(["fetchContractById"]),
+    ...mapActions(["fetchContractById", "syncContractAfterPaymentUpdate"]),
     loadContract(id) {
       this.fetchContractById(id).catch((error) => {
         console.error(error);
@@ -205,16 +210,57 @@ export default {
       this.selectedPaymentRow = null;
       this.captureModalMode = false;
     },
-    handleEditSuccess(updatedPayment) {
-      this.closePaymentModal();
-      if (updatedPayment) {
-        this.$store.commit("updateContractPayment", updatedPayment);
-      }
-      this.$store
-        .dispatch("refreshContractPayments", this.contractId)
-        .catch((error) => {
+    async handleEditSuccess(result) {
+      const amountChanged = Boolean(result?.amountChanged);
+      const adjustedCount = Number(result?.adjustedCount) || 0;
+      const needsFullListReload =
+        amountChanged || this.captureModalMode || result?.statusChanged;
+
+      if (needsFullListReload) {
+        this.paymentsRefreshing = true;
+        try {
+          await this.syncContractAfterPaymentUpdate(this.contractId);
+          const rebalanceMsg = redistributionSuccessMessage(adjustedCount);
+          if (rebalanceMsg) {
+            this.$notify({
+              title: "Calendario actualizado",
+              type: "success",
+              message: rebalanceMsg,
+              icon: "tim-icons icon-bell-55",
+            });
+          } else {
+            this.$notify({
+              title: "Éxito",
+              type: "success",
+              message: this.captureModalMode
+                ? "Pago capturado correctamente"
+                : "Pago actualizado correctamente",
+              icon: "tim-icons icon-bell-55",
+            });
+          }
+          this.closePaymentModal();
+        } catch (error) {
           console.error(error);
-        });
+          this.$notify({
+            title: "Error",
+            type: "danger",
+            message:
+              "El pago se guardó pero no se pudo actualizar la tabla. Recargue la página.",
+            icon: "tim-icons icon-bell-55",
+          });
+        } finally {
+          this.paymentsRefreshing = false;
+        }
+        return;
+      }
+
+      this.closePaymentModal();
+      this.$notify({
+        title: "Éxito",
+        type: "success",
+        message: "Pago actualizado correctamente",
+        icon: "tim-icons icon-bell-55",
+      });
     },
     handlePayment(row) {
       const pendingRow =
@@ -253,3 +299,20 @@ export default {
   },
 };
 </script>
+
+<style>
+.payments-table-wrap .table-container {
+  max-height: 480px;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.payments-table-wrap .el-table {
+  width: 100% !important;
+}
+
+.payment-schedule-summary {
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+</style>

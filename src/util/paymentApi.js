@@ -46,9 +46,49 @@ export function statusBadgeClass(status) {
   return map[status] || "badge badge-default";
 }
 
+export function paymentAmountChanged(originalAmount, nextAmount) {
+  const prev = Number(originalAmount);
+  const next = Number(nextAmount);
+  if (Number.isNaN(prev) || Number.isNaN(next)) {
+    return String(originalAmount ?? "") !== String(nextAmount ?? "");
+  }
+  return Math.abs(prev - next) > 0.001;
+}
+
+export function redistributionSuccessMessage(adjustedCount) {
+  const count = Number(adjustedCount) || 0;
+  if (count <= 0) {
+    return null;
+  }
+  return `Se ajustaron ${count} mensualidad(es) pendiente(s) para mantener el total del contrato.`;
+}
+
+export function paymentUpdateErrorMessage(error) {
+  const errors = extractApiErrors(error);
+  if (errors.length) {
+    return errors[0];
+  }
+  return "No se pudo actualizar el monto. Verifique que haya mensualidades pendientes suficientes.";
+}
+
+export function adjustedPaymentsCountFromResponse(response) {
+  const fromBody = response?.data?.adjusted_payments_count;
+  if (fromBody != null && !Number.isNaN(Number(fromBody))) {
+    return Number(fromBody);
+  }
+  const header = response?.headers?.["x-adjusted-payments-count"];
+  if (header != null && !Number.isNaN(Number(header))) {
+    return Number(header);
+  }
+  return 0;
+}
+
 export function formatPaymentFromApi(payment) {
   if (!payment) {
     return null;
+  }
+  if (payment.payment && typeof payment.payment === "object") {
+    return formatPaymentFromApi(payment.payment);
   }
   const status = coercePaymentStatus(
     payment.payment_status_name || payment.status_name || payment.status
