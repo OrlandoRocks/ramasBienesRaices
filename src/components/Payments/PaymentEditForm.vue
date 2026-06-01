@@ -65,8 +65,9 @@
               />
             </ValidationProvider>
             <small class="text-muted field-hint">
-              Si cambia el monto, el siguiente pago pendiente se ajustará
-              automáticamente.
+              Si cambia el monto, otras mensualidades pendientes se ajustarán en
+              el servidor para mantener el total del contrato. Los pagos
+              marcados como Pagado no se modifican.
             </small>
           </div>
         </div>
@@ -169,15 +170,18 @@ import { required } from "vee-validate/dist/rules";
 import { ValidationObserver, ValidationProvider } from "vee-validate";
 import { DatePicker, Option, Select } from "element-ui";
 import { swalAboveDialog } from "@/util/swalDialog";
-import paymentsService from "@/services/paymentsService";
+import paymentsService, { updatePayment } from "@/services/paymentsService";
 import {
   PAYMENT_STATUSES,
   statusBadgeClass,
   formatPaymentFromApi,
   editFormFromPayment,
   emptyEditForm,
+  coercePaymentStatus,
   isPaidStatus,
   normalizePaymentAmount,
+  paymentAmountChanged,
+  paymentUpdateErrorMessage,
   extractApiErrors,
 } from "@/util/paymentApi";
 
@@ -225,6 +229,7 @@ export default {
       formErrors: [],
       paymentSummary: null,
       originalStatus: "Pendiente",
+      originalAmount: null,
       editForm: emptyEditForm(),
       statusOptions: PAYMENT_STATUSES,
     };
@@ -296,6 +301,7 @@ export default {
         this.paymentSummary = payment;
         this.editForm = editFormFromPayment(payment);
         this.originalStatus = payment.payment_status_name;
+        this.originalAmount = normalizePaymentAmount(payment.amount);
 
         if (this.captureMode && this.editForm.status === "Pendiente") {
           this.editForm.status = "Pagado";
@@ -377,27 +383,31 @@ export default {
 
       this.formErrors = [];
       this.saving = true;
+      const payload = this.buildPayload();
+      const amountChanged = paymentAmountChanged(
+        this.originalAmount,
+        payload.amount
+      );
+      const statusChanged =
+        coercePaymentStatus(this.originalStatus) !==
+        coercePaymentStatus(payload.status);
+
       try {
-        const response = await paymentsService.patch(
+        const { payment: updated, adjustedCount } = await updatePayment(
           this.paymentId,
-          this.buildPayload()
+          payload
         );
-        const updated = formatPaymentFromApi(response.data);
         this.originalStatus = updated.payment_status_name;
-        this.$store.commit("updateContractPayment", updated);
+        this.originalAmount = normalizePaymentAmount(updated.amount);
         this.$store.commit("setPaymentUpdate", updated);
-        this.$emit("success", updated);
-        this.$emit("close");
-        this.$notify({
-          title: "Éxito",
-          type: "success",
-          message: this.captureMode
-            ? "Pago capturado correctamente"
-            : "Pago actualizado correctamente",
-          icon: "tim-icons icon-bell-55",
+        this.$emit("success", {
+          payment: updated,
+          amountChanged,
+          statusChanged,
+          adjustedCount,
         });
       } catch (error) {
-        this.formErrors = extractApiErrors(error);
+        this.formErrors = [paymentUpdateErrorMessage(error)];
       } finally {
         this.saving = false;
       }

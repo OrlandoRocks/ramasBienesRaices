@@ -2,14 +2,22 @@
   <div class="row">
     <div class="col-md-12">
       <card>
-        <h4
-          slot="header"
-          class="card-title contract-show-back"
-          @click="goToContracts"
-        >
-          <i class="tim-icons icon-minimal-left"></i>
-          Contrato
-        </h4>
+        <div slot="header" class="contract-show-header">
+          <h4 class="card-title contract-show-back" @click="goToContracts">
+            <i class="tim-icons icon-minimal-left"></i>
+            Contrato
+          </h4>
+          <base-button
+            v-if="!loading && contractId"
+            type="primary"
+            size="sm"
+            :disabled="exportingPdf"
+            @click.stop="exportContractPdf"
+          >
+            <i class="tim-icons icon-paper"></i>
+            {{ exportingPdf ? "Generando…" : "Exportar PDF" }}
+          </base-button>
+        </div>
 
         <div v-if="loading" class="text-center py-4 text-muted">
           Cargando contrato...
@@ -81,6 +89,8 @@
 <script>
 import { mapGetters, mapActions } from "vuex";
 import ContractPaymentsPanel from "@/components/Contracts/ContractPaymentsPanel.vue";
+import { buildContractPdfPayload } from "@/util/contractPdfData";
+import { downloadContractPdf } from "@/util/contractPdf";
 
 function displayValue(value) {
   if (value === null || value === undefined || value === "") {
@@ -107,10 +117,17 @@ export default {
   data() {
     return {
       loading: false,
+      exportingPdf: false,
     };
   },
   computed: {
-    ...mapGetters(["getLandById", "getClientById", "getContractById"]),
+    ...mapGetters([
+      "getLandById",
+      "getClientById",
+      "getContractById",
+      "getContractPayments",
+      "getContractFinancialSummary",
+    ]),
 
     contractInfo() {
       return this.getContractById;
@@ -132,6 +149,7 @@ export default {
     },
     contractFields() {
       const c = this.contractInfo;
+      const fin = this.getContractFinancialSummary;
       return [
         {
           label: "Fecha del contrato",
@@ -152,7 +170,11 @@ export default {
         },
         {
           label: "Cantidad pagada",
-          value: `${this.formatCurrency(c.total_paid)} MXN`,
+          value: `${this.formatCurrency(fin.totalPaid)} MXN`,
+        },
+        {
+          label: "Saldo pendiente",
+          value: `${this.formatCurrency(fin.pendingBalance)} MXN`,
         },
       ];
     },
@@ -190,6 +212,47 @@ export default {
       this.$router.push({ name: "Contracts" });
     },
 
+    async exportContractPdf() {
+      if (this.exportingPdf || this.loading) {
+        return;
+      }
+      this.exportingPdf = true;
+      try {
+        const fin = this.getContractFinancialSummary;
+        const payload = buildContractPdfPayload({
+          contract: {
+            ...this.contractInfo,
+            total_paid: fin.totalPaid,
+          },
+          client: this.clientInfo,
+          land: this.landInfo,
+          payments: this.getContractPayments,
+        });
+        await downloadContractPdf(
+          payload,
+          `contrato-${this.contractId}-${new Date()
+            .toISOString()
+            .slice(0, 10)}.pdf`
+        );
+        this.$notify({
+          title: "PDF generado",
+          type: "success",
+          message: "Se descargó el resumen del contrato.",
+          icon: "tim-icons icon-bell-55",
+        });
+      } catch (error) {
+        console.error(error);
+        this.$notify({
+          title: "Error",
+          type: "danger",
+          message: "No se pudo generar el PDF del contrato.",
+          icon: "tim-icons icon-bell-55",
+        });
+      } finally {
+        this.exportingPdf = false;
+      }
+    },
+
     loadContractData(contract_id) {
       this.loading = true;
       this.fetchContractById(contract_id)
@@ -220,6 +283,14 @@ export default {
 </script>
 
 <style scoped>
+.contract-show-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 12px;
+}
+
 .contract-show-back {
   cursor: pointer;
   margin-bottom: 0;

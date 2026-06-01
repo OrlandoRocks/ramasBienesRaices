@@ -1,9 +1,9 @@
-import paymentsService from "@/services/paymentsService";
+import { updatePayment } from "@/services/paymentsService";
 import { swalAboveDialog } from "@/util/swalDialog";
 import {
-  formatPaymentFromApi,
   isPaidStatus,
-  extractApiErrors,
+  paymentAmountChanged,
+  paymentUpdateErrorMessage,
 } from "@/util/paymentApi";
 
 function formatCurrency(amount) {
@@ -61,6 +61,7 @@ export async function runPaymentSaveFlow({
   paymentId,
   payload,
   originalStatus,
+  originalAmount,
   captureMode,
 }) {
   const needsPendienteConfirm =
@@ -79,16 +80,19 @@ export async function runPaymentSaveFlow({
   }
 
   try {
-    const response = await paymentsService.patch(paymentId, payload);
+    const { payment, adjustedCount } = await updatePayment(paymentId, payload);
+    const amountChanged = paymentAmountChanged(originalAmount, payload.amount);
     return {
       cancelled: false,
-      payment: formatPaymentFromApi(response.data),
+      payment,
+      adjustedCount,
+      amountChanged,
     };
   } catch (error) {
     return {
       cancelled: false,
       failed: true,
-      errors: extractApiErrors(error),
+      errors: [paymentUpdateErrorMessage(error)],
     };
   }
 }

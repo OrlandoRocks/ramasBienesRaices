@@ -66,9 +66,8 @@ export default {
     },
   },
   methods: {
-    handleSuccess(payment) {
-      this.closeModal();
-      this.$emit("success", payment);
+    handleSuccess(result) {
+      this.$emit("success", result);
     },
     handleClose() {
       this.closeModal();
