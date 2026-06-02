@@ -1,6 +1,8 @@
 import VueRouter from "vue-router";
 import routes from "./routes";
 import store from "@/store";
+import { Message } from "element-ui";
+import store from "@/store";
 import { isAuthTokenValid, clearAuthToken, getAuthToken } from "@/util/auth";
 import { canAccessRoute } from "@/util/permissions";
 import { getDefaultRouteForUser } from "@/util/userSession";

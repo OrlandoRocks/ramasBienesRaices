@@ -270,6 +270,7 @@
 
             <div class="text-center">
               <base-button
+                v-permission="isEdit ? 'client.update' : 'client.create'"
                 :disabled="isSubmitting"
                 native-type="submit"
                 type="primary"
@@ -574,6 +575,7 @@ export default {
       this.id = this.$route.params.id;
       this.loadClientData(this.id);
     }
+    this.isEdit = this.$route.params.id ? true : false;
   },
 };
 </script>
